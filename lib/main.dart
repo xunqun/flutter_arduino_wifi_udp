@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_wifi_udp/screen/ConnectionScreen.dart';
+import 'package:flutter_wifi_udp/screen/connect_screen.dart';
+import 'package:flutter_wifi_udp/screen/wifi_screen.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
 class MyApp extends StatefulWidget {
