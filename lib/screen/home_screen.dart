@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_wifi_udp/screen/connect_screen.dart';
+import 'package:flutter_wifi_udp/screen/page_file.dart';
+import 'package:flutter_wifi_udp/screen/page_settings.dart';
+import 'package:flutter_wifi_udp/screen/page_terminal.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -10,10 +12,11 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   var _index = 0;
-  final _pages = const [ConnectionScreen(), ConnectionScreen()];
+  final _pages = const [TerminalPage(), FilePage(), PageSetting()];
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(title: Text('Home'),),
       body: _pages[_index],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _index,

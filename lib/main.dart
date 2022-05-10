@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_wifi_udp/screen/connect_screen.dart';
-import 'package:flutter_wifi_udp/screen/wifi_screen.dart';
+import 'package:flutter_wifi_udp/screen/page_connect.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 void main() {
