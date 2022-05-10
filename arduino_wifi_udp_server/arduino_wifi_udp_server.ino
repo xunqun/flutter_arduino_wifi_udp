@@ -34,9 +34,5 @@ void loop() {
     Udp.printf("\r\n");
     Udp.endPacket();
   }
-  delay(2000);
 
-  Udp.beginPacket(Udp.remoteIP(),Udp.remotePort());
-  Udp.printf("hello from server ");
-  Udp.endPacket();
 }

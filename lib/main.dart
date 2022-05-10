@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_wifi_udp/screen/page_connect.dart';
+import 'package:flutter_wifi_udp/manager/udp_manager.dart';
+import 'package:flutter_wifi_udp/screen/screen_connect.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:provider/provider.dart';
+
+import 'manager/log_manager.dart';
+import 'manager/settings.dart';
 
 void main() {
   runApp(MyApp());
@@ -28,12 +33,19 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Wifi UDP Client',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider.value(value: logManager),
+        ChangeNotifierProvider.value(value: udpManager),
+        ChangeNotifierProvider.value(value: settings)
+      ],
+      child: MaterialApp(
+        title: 'Wifi UDP Client',
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
+        ),
+        home: check(),
       ),
-      home: check(),
     );
   }
 

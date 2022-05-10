@@ -2,7 +2,7 @@ import 'dart:math';
 
 import 'package:flutter_wifi_udp/command/out_command.dart';
 import 'package:flutter_wifi_udp/manager/settings.dart';
-import 'package:flutter_wifi_udp/manager/wifi_manager.dart';
+import 'package:flutter_wifi_udp/manager/udp_manager.dart';
 
 import 'log_manager.dart';
 

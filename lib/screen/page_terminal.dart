@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_wifi_udp/manager/log_manager.dart';
-import 'package:flutter_wifi_udp/manager/wifi_manager.dart';
+import 'package:flutter_wifi_udp/manager/udp_manager.dart';
 import 'package:flutter_wifi_udp/model/log.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/src/provider.dart';
@@ -39,7 +39,7 @@ class _TerminalPageState extends State<TerminalPage> {
           IconButton(
             icon: const Icon(Icons.bluetooth_connected),
             onPressed: () {
-              udpManager.disconnect();
+              udpManager.close();
             },
           ),
           IconButton(
