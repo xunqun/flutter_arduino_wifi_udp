@@ -37,13 +37,7 @@ class _TerminalPageState extends State<TerminalPage> {
             },
           ),
           IconButton(
-            icon: const Icon(Icons.bluetooth_connected),
-            onPressed: () {
-              udpManager.close();
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.restore_from_trash),
+            icon: const Icon(Icons.cleaning_services),
             onPressed: () {
               logManager.clear();
             },

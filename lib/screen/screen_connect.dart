@@ -17,12 +17,12 @@ class ConnectionScreen extends StatefulWidget {
 
 class _ConnectionScreenState extends State<ConnectionScreen> {
 
+  final TextEditingController ssidController = TextEditingController(text: 'HiAp');
+  final TextEditingController pwController = TextEditingController(text: 'BB9ESERVER');
+
   @override
   Widget build(BuildContext context) {
     var udpManager = context.watch<UdpManager>();
-    final TextEditingController ssidController = TextEditingController(text: 'HiAp');
-    final TextEditingController pwController = TextEditingController(text: 'BB9ESERVER');
-
     return Scaffold(
       appBar: AppBar(
         title: Text('Connect to UDP server'),
@@ -34,7 +34,7 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '1. 連接到 Access Point',
+                '1. 連接到 Access Point, 192.168.4.1:1234',
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               TextField(
@@ -47,37 +47,19 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
               ),
               ElevatedButton(
                   onPressed: () {
-                    WiFiForIoTPlugin.connect(ssidController.text,
-                        password: pwController.text, joinOnce: true, security: NetworkSecurity.WPA);
+                    connect();
+
                   },
                   child: Text('Wifi AP')),
               Padding(
                 padding: const EdgeInsets.only(top: 32.0),
-                child: Text('2. 設定 Remote IP/Port', style: TextStyle(fontWeight: FontWeight.bold)),
-              ),
-              Text('IP: 192.168.4.1'),
-              Text('Port: 1234'),
-
-              ElevatedButton(
-                  onPressed: () {
-                    var addressesIListenFrom = InternetAddress.anyIPv4;
-                    int portIListenOn = 1234; //0 is random
-                    RawDatagramSocket.bind(addressesIListenFrom, portIListenOn).then((RawDatagramSocket socket) {
-                      socket.broadcastEnabled = true;
-                      udpManager.rawDatagramSocket = socket;
-                      udpManager.write(Utf8Codec().encode('Connected to client'));
-                    });
-                  },
-                  child: Text('監聽')),
-              Padding(
-                padding: const EdgeInsets.only(top: 32.0),
-                child: Text('3. 傳送 Hello 訊息', style: TextStyle(fontWeight: FontWeight.bold)),
+                child: Text('2. 傳送 Hello 訊息', style: TextStyle(fontWeight: FontWeight.bold)),
               ),
               ElevatedButton(
                   onPressed: () {
                     udpManager.write(const Utf8Codec().encode('Hello from client'));
                   },
-                  child: Text('Send')),
+                  child: Text('hello')),
               Spacer(),
               MaterialButton(
                   onPressed: () {
@@ -85,12 +67,27 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
                   },
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: [Icon(Icons.home), Text('HOME')],
+                    children: [Icon(Icons.home), Text('GO')],
                   ))
             ],
           ),
         ),
       ),
     );
+  }
+
+  void connect() async{
+    udpManager.isConnected = await WiFiForIoTPlugin.connect(ssidController.text,
+        password: pwController.text, joinOnce: true, security: NetworkSecurity.WPA);
+
+    if(udpManager.isConnected){
+      var addressesIListenFrom = InternetAddress.anyIPv4;
+      int portIListenOn = 1234; //0 is random
+      RawDatagramSocket.bind(addressesIListenFrom, portIListenOn).then((RawDatagramSocket socket) {
+        socket.broadcastEnabled = true;
+        udpManager.rawDatagramSocket = socket;
+        udpManager.write(Utf8Codec().encode('Connected to client'));
+      });
+    }
   }
 }
