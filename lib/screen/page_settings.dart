@@ -62,6 +62,24 @@ class _SettingPageState extends State<SettingPage> {
                 }
               }
             }),
+          ),
+          ListTile(
+            title: Text('Trans interval (ms)'),
+            subtitle: Text(settings.transInterval.toString()),
+            onTap: () => _displayTextInputDialog(context, 'Trans interval (ms)', settings.transInterval.toString()).then((value) {
+              if (value != null) {
+                var v = int.parse(value);
+                if(v > 0) {
+                  settings.transInterval = v;
+                }else{
+                  const snackBar = SnackBar(
+                    content: Text('數字不能小於0'),
+                  );
+
+                  ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                }
+              }
+            }),
           )
         ],
       ),

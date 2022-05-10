@@ -62,11 +62,21 @@ class Settings extends ChangeNotifier{
   }
 
   int get dataLength{
+    // return pref?.getInt('dataLength') ?? 253;
     return pref?.getInt('dataLength') ?? 253;
   }
 
   set dataLength(int value){
     pref?.setInt('dataLength', value);
+    notifyListeners();
+  }
+
+  int get transInterval{
+    return pref?.getInt('transInterval') ?? 20;
+  }
+
+  set transInterval(int value){
+    pref?.setInt('transInterval', value);
     notifyListeners();
   }
 

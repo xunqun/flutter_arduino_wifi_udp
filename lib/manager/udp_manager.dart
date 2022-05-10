@@ -20,6 +20,8 @@ class UdpManager extends ChangeNotifier {
   RawDatagramSocket? _rawDatagramSocket = null;
 
   set rawDatagramSocket(socket) {
+    _rawDatagramSocket?.close();
+    _rawDatagramSocket = null;
     _rawDatagramSocket = socket;
     _rawDatagramSocket?.listen((event) {
       switch (event) {

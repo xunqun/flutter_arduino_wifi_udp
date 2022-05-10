@@ -19,7 +19,7 @@ void setup() {
 void loop() {
   int packetSize = Udp.parsePacket();
   if (packetSize) {
-    int len = Udp.read(packetBuffer, 255);
+    int len = Udp.read(packetBuffer, 261);
     if (len > 0) packetBuffer[len-1] = 0;
     Serial.print("Recibido(IP/Size/Data): ");
     Serial.print(Udp.remoteIP());
@@ -28,11 +28,12 @@ void loop() {
     Serial.print(" / ");
     Serial.println(packetBuffer);
 
-    Udp.beginPacket(Udp.remoteIP(),Udp.remotePort());
-    Udp.printf("received: ");
-    Udp.printf(packetBuffer);
-    Udp.printf("\r\n");
-    Udp.endPacket();
+//    Udp.beginPacket(Udp.remoteIP(),Udp.remotePort());
+//    Udp.printf("received: ");
+//    Udp.printf(packetBuffer);
+//    Udp.printf("\r\n");
+//    Udp.endPacket();
   }
+
 
 }

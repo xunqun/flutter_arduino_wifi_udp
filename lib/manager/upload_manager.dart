@@ -18,22 +18,20 @@ class UploadManager {
     }
     var bytes = StartCommand(segments, fileExt).bytes;
     logManager.addSendRaw(bytes, msg: 'START COMMAND', desc: 'total chunks: $segments');
-    var response = await udpManager.write(bytes);
-    logManager.addReceiveRaw(response, msg: 'START ACK');
+    await udpManager.write(bytes);
     for (int i = 0; i < segments; i++) {
       var start = settings.dataLength * i;
       var end = min(start + settings.dataLength, data.length);
       var dataSegment = data.sublist(start, end);
       bytes = DataCommand(dataSegment, i).bytes;
       logManager.addSendRaw(bytes, msg:'DATA COMMAND', desc: 'chunk $i');
-      response = await udpManager.write(bytes);
-      logManager.addReceiveRaw(response, msg: 'DATA ACK');
+      await udpManager.write(bytes);
+      await Future.delayed(Duration(milliseconds: settings.transInterval));
     }
     bytes = EndCommand().bytes;
     var ms = DateTime.now().difference(startTime).inMilliseconds;
     logManager.addSendRaw(bytes, msg: 'END COMMAND', desc: 'total cost $ms ms');
-    response = await udpManager.write(bytes);
-    logManager.addReceiveRaw(response, msg: 'END ACK');
+    await udpManager.write(bytes);
 
     return true;
   }

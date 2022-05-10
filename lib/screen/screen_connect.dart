@@ -22,8 +22,7 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
     var udpManager = context.watch<UdpManager>();
     final TextEditingController ssidController = TextEditingController(text: 'HiAp');
     final TextEditingController pwController = TextEditingController(text: 'BB9ESERVER');
-    final TextEditingController ipController = TextEditingController(text: '192.168.4.1');
-    final TextEditingController portController = TextEditingController(text: '1234');
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Connect to UDP server'),
@@ -56,24 +55,17 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
                 padding: const EdgeInsets.only(top: 32.0),
                 child: Text('2. 設定 Remote IP/Port', style: TextStyle(fontWeight: FontWeight.bold)),
               ),
-              TextField(
-                controller: ipController,
-                decoration: InputDecoration(hintText: 'IP'),
-              ),
-              TextField(
-                controller: portController,
-                decoration: InputDecoration(hintText: 'Port'),
-              ),
+              Text('IP: 192.168.4.1'),
+              Text('Port: 1234'),
+
               ElevatedButton(
                   onPressed: () {
                     var addressesIListenFrom = InternetAddress.anyIPv4;
-                    int portIListenOn = int.parse(portController.text); //0 is random
+                    int portIListenOn = 1234; //0 is random
                     RawDatagramSocket.bind(addressesIListenFrom, portIListenOn).then((RawDatagramSocket socket) {
                       socket.broadcastEnabled = true;
                       udpManager.rawDatagramSocket = socket;
                       udpManager.write(Utf8Codec().encode('Connected to client'));
-
-
                     });
                   },
                   child: Text('監聽')),
