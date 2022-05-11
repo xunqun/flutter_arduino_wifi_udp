@@ -1,7 +1,7 @@
 #include <WiFi.h>
-#include <WiFiUdp.h>
+#include "AsyncUDP.h"
 
-WiFiUDP Udp; // Creation of wifi Udp instance
+AsyncUDP udp;
 
 char packetBuffer[255];
 
@@ -13,27 +13,35 @@ const char *password = "BB9ESERVER";
 void setup() {
   Serial.begin(115200);
   WiFi.softAP(ssid, password);  // ESP-32 as access point
-  Udp.begin(localPort);
+//  Udp.begin(localPort);
+ if(udp.listen(1234)) {
+  Serial.print("UDP Listening on IP: ");
+        Serial.println(WiFi.localIP());
+        udp.onPacket([](AsyncUDPPacket packet) {
+            Serial.print("UDP Packet Type: ");
+            Serial.print(packet.isBroadcast()?"Broadcast":packet.isMulticast()?"Multicast":"Unicast");
+            Serial.print(", From: ");
+            Serial.print(packet.remoteIP());
+            Serial.print(":");
+            Serial.print(packet.remotePort());
+            Serial.print(", To: ");
+            Serial.print(packet.localIP());
+            Serial.print(":");
+            Serial.print(packet.localPort());
+            Serial.print(", Length: ");
+            Serial.print(packet.length());
+            Serial.print(", Data: ");
+            Serial.write(packet.data(), packet.length());
+            Serial.println();
+            //reply to the client
+            packet.printf("Got %u bytes of data", packet.length());
+        });
+ }
 }
 
 void loop() {
-  int packetSize = Udp.parsePacket();
-  if (packetSize) {
-    int len = Udp.read(packetBuffer, 261);
-    if (len > 0) packetBuffer[len-1] = 0;
-    Serial.print("Recibido(IP/Size/Data): ");
-    Serial.print(Udp.remoteIP());
-    Serial.print(" / ");
-    Serial.print(packetSize);
-    Serial.print(" / ");
-    Serial.println(packetBuffer);
 
-//    Udp.beginPacket(Udp.remoteIP(),Udp.remotePort());
-//    Udp.printf("received: ");
-//    Udp.printf(packetBuffer);
-//    Udp.printf("\r\n");
-//    Udp.endPacket();
-  }
-
+   delay(1000);
+   udp.broadcast("Anyone here?");
 
 }
