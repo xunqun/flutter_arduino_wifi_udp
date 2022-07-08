@@ -72,7 +72,7 @@ class Settings extends ChangeNotifier{
   }
 
   int get transInterval{
-    return pref?.getInt('transInterval') ?? 20;
+    return pref?.getInt('transInterval') ?? 10;
   }
 
   set transInterval(int value){

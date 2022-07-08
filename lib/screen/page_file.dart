@@ -3,7 +3,10 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_wifi_udp/manager/udp_manager.dart';
 import 'package:flutter_wifi_udp/manager/upload_manager.dart';
+import 'package:sn_progress_dialog/sn_progress_dialog.dart';
+import 'package:provider/src/provider.dart';
 
 var busy = false;
 
@@ -15,8 +18,11 @@ class FilePage extends StatefulWidget {
 }
 
 class _FilePageState extends State<FilePage> {
+  var progress = 0;
+
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Upload file'),
@@ -35,7 +41,7 @@ class _FilePageState extends State<FilePage> {
                 setState(() {
                   busy = true;
                 });
-                upload('assets/the_mini_vandals.mp3', 'mp3');
+                upload(context, 'assets/the_mini_vandals.mp3', 'mp3');
               },
             ),
           ),
@@ -52,7 +58,7 @@ class _FilePageState extends State<FilePage> {
                   busy = true;
                 });
 
-                upload('assets/levelup.wav', 'wav');
+                upload(context, 'assets/levelup.wav', 'wav');
               },
             ),
           ),
@@ -68,7 +74,7 @@ class _FilePageState extends State<FilePage> {
                 setState(() {
                   busy = true;
                 });
-                upload('assets/android.png', 'png');
+                upload(context, 'assets/android.png', 'png');
               },
             ),
           ),
@@ -89,24 +95,34 @@ class _FilePageState extends State<FilePage> {
       ),
     );
   }
-
-  void upload(String path, String ext) async {
+  ProgressDialog? pd;
+  void upload(BuildContext context, String path, String ext) async {
+    pd = ProgressDialog(context: context);
+    pd!.show(max: 100, msg: "傳輸中...",progressType: ProgressType.valuable,);
     ByteData data = await rootBundle.load(path);
-    var success = await uploadManager.startTask(data.buffer.asInt8List(), ext);
+    await uploadManager.startTask(data.buffer.asInt8List(), ext, returnsAFunction());
+    pd?.close();
     setState(() {
       busy = false;
     });
   }
 
+  Function(int) returnsAFunction() => (int x) {
+    pd?.update(value: x);
+  };
+
   void pickFile() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(withData: true);
 
     if (result != null) {
+      pd = ProgressDialog(context: context);
+      pd!.show(max: 100, msg: "傳輸中...",progressType: ProgressType.valuable,);
       setState(() {
         busy = true;
       });
       var platformfile = result.files.single;
-      var success = await uploadManager.startTask(platformfile.bytes!.toList(growable: false), platformfile.extension!);
+      var success = await uploadManager.startTask(platformfile.bytes!.toList(growable: false), platformfile.extension!, returnsAFunction());
+      pd?.close();
       setState(() {
         busy = false;
       });

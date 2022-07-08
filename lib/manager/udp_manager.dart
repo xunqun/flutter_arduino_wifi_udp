@@ -8,6 +8,15 @@ UdpManager udpManager = UdpManager();
 class UdpManager extends ChangeNotifier {
   /// Target AP connect state
   bool _isConnected = true;
+  int _progress = 0;
+
+  set progress(value){
+    if(_progress != value) {
+      _progress = value;
+      notifyListeners();
+    }
+  }
+  get progress => _progress;
 
   set isConnected(value) {
     _isConnected = value;

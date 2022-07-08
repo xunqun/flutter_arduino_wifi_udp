@@ -9,8 +9,7 @@ import 'log_manager.dart';
 var uploadManager = UploadManager();
 class UploadManager {
 
-  Future<bool> startTask(List<int> data, String fileExt) async {
-
+  Future<bool> startTask(List<int> data, String fileExt, Function(int) progressCallback ) async {
     var startTime = DateTime.now();
     var segments = (data.length ~/ settings.dataLength);
     if (data.length % settings.dataLength > 0) {
@@ -27,12 +26,14 @@ class UploadManager {
       logManager.addSendRaw(bytes, msg:'DATA COMMAND', desc: 'chunk $i');
       await udpManager.write(bytes);
       await Future.delayed(Duration(milliseconds: settings.transInterval));
+      udpManager.progress = i * 100.0 ~/ (segments - 1);
+      progressCallback(i * 100.0 ~/ (segments - 1));
     }
     bytes = EndCommand().bytes;
     var ms = DateTime.now().difference(startTime).inMilliseconds;
     logManager.addSendRaw(bytes, msg: 'END COMMAND', desc: 'total cost $ms ms');
     await udpManager.write(bytes);
-
+    udpManager.progress = 100;
     return true;
   }
 }

@@ -11,13 +11,17 @@ const char *ssid = "HiAp";
 const char *password = "BB9ESERVER";
 
 void setup() {
+  pinMode(LED_BUILTIN, OUTPUT);
   Serial.begin(115200);
   WiFi.softAP(ssid, password);  // ESP-32 as access point
 //  Udp.begin(localPort);
  if(udp.listen(1234)) {
   Serial.print("UDP Listening on IP: ");
+        digitalWrite(LED_BUILTIN, HIGH);digitalWrite(LED_BUILTIN, HIGH);
         Serial.println(WiFi.localIP());
         udp.onPacket([](AsyncUDPPacket packet) {
+            digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
+            delay(10);
             Serial.print("UDP Packet Type: ");
             Serial.print(packet.isBroadcast()?"Broadcast":packet.isMulticast()?"Multicast":"Unicast");
             Serial.print(", From: ");
@@ -35,13 +39,17 @@ void setup() {
             Serial.println();
             //reply to the client
             packet.printf("Got %u bytes of data", packet.length());
+                     // wait for a second
+            digitalWrite(LED_BUILTIN, LOW);    // turn the LED off by making the voltage LOW
+            delay(10);               
+
         });
  }
 }
 
 void loop() {
-
-   delay(1000);
-   udp.broadcast("Anyone here?");
+//
+//   delay(1000);
+//   udp.broadcast("Anyone here?");
 
 }
