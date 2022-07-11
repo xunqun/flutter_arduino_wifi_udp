@@ -3,10 +3,8 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_wifi_udp/manager/udp_manager.dart';
 import 'package:flutter_wifi_udp/manager/upload_manager.dart';
 import 'package:sn_progress_dialog/sn_progress_dialog.dart';
-import 'package:provider/src/provider.dart';
 
 var busy = false;
 
@@ -22,7 +20,6 @@ class _FilePageState extends State<FilePage> {
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       appBar: AppBar(
         title: Text('Upload file'),
@@ -36,14 +33,14 @@ class _FilePageState extends State<FilePage> {
             trailing: busy
                 ? CircularProgressIndicator()
                 : IconButton(
-              icon: Icon(Icons.send_to_mobile),
-              onPressed: () {
-                setState(() {
-                  busy = true;
-                });
-                upload(context, 'assets/the_mini_vandals.mp3', 'mp3');
-              },
-            ),
+                    icon: Icon(Icons.send_to_mobile),
+                    onPressed: () {
+                      setState(() {
+                        busy = true;
+                      });
+                      upload(context, 'assets/the_mini_vandals.mp3', 'mp3');
+                    },
+                  ),
           ),
           ListTile(
             leading: Icon(Icons.music_note),
@@ -52,15 +49,15 @@ class _FilePageState extends State<FilePage> {
             trailing: busy
                 ? CircularProgressIndicator()
                 : IconButton(
-              icon: Icon(Icons.send_to_mobile),
-              onPressed: () {
-                setState(() {
-                  busy = true;
-                });
+                    icon: Icon(Icons.send_to_mobile),
+                    onPressed: () {
+                      setState(() {
+                        busy = true;
+                      });
 
-                upload(context, 'assets/levelup.wav', 'wav');
-              },
-            ),
+                      upload(context, 'assets/levelup.wav', 'wav');
+                    },
+                  ),
           ),
           ListTile(
             leading: Icon(Icons.photo),
@@ -69,14 +66,14 @@ class _FilePageState extends State<FilePage> {
             trailing: busy
                 ? CircularProgressIndicator()
                 : IconButton(
-              icon: Icon(Icons.send_to_mobile),
-              onPressed: () {
-                setState(() {
-                  busy = true;
-                });
-                upload(context, 'assets/android.png', 'png');
-              },
-            ),
+                    icon: Icon(Icons.send_to_mobile),
+                    onPressed: () {
+                      setState(() {
+                        busy = true;
+                      });
+                      upload(context, 'assets/android.png', 'png');
+                    },
+                  ),
           ),
           ListTile(
             leading: Icon(Icons.folder_open),
@@ -85,20 +82,26 @@ class _FilePageState extends State<FilePage> {
             trailing: busy
                 ? CircularProgressIndicator()
                 : IconButton(
-              icon: Icon(Icons.search),
-              onPressed: () {
-                pickFile();
-              },
-            ),
+                    icon: Icon(Icons.search),
+                    onPressed: () {
+                      pickFile();
+                    },
+                  ),
           ),
         ],
       ),
     );
   }
+
   ProgressDialog? pd;
+
   void upload(BuildContext context, String path, String ext) async {
     pd = ProgressDialog(context: context);
-    pd!.show(max: 100, msg: "傳輸中...",progressType: ProgressType.valuable,);
+    pd!.show(
+      max: 100,
+      msg: "傳送中...",
+      progressType: ProgressType.valuable,
+    );
     ByteData data = await rootBundle.load(path);
     await uploadManager.startTask(data.buffer.asInt8List(), ext, returnsAFunction());
     pd?.close();
@@ -108,7 +111,7 @@ class _FilePageState extends State<FilePage> {
   }
 
   Function(int) returnsAFunction() => (int x) {
-    pd?.update(value: x);
+        pd?.update(value: x);
   };
 
   void pickFile() async {
@@ -116,12 +119,17 @@ class _FilePageState extends State<FilePage> {
 
     if (result != null) {
       pd = ProgressDialog(context: context);
-      pd!.show(max: 100, msg: "傳輸中...",progressType: ProgressType.valuable,);
+      pd!.show(
+        max: 100,
+        msg: "傳輸中...",
+        progressType: ProgressType.valuable,
+      );
       setState(() {
         busy = true;
       });
       var platformfile = result.files.single;
-      var success = await uploadManager.startTask(platformfile.bytes!.toList(growable: false), platformfile.extension!, returnsAFunction());
+      await uploadManager.startTask(
+          platformfile.bytes!.toList(growable: false), platformfile.extension!, returnsAFunction());
       pd?.close();
       setState(() {
         busy = false;
