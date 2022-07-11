@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:math';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter_wifi_udp/command/incommand.dart';
 import 'package:flutter_wifi_udp/manager/log_manager.dart';
 
 UdpManager udpManager = UdpManager();
@@ -39,6 +40,7 @@ class UdpManager extends ChangeNotifier {
           if (dg != null) {
             List<int> bytes = dg.data.toList();
             logManager.addReceiveRaw(bytes);
+            // var ack = AckCommand.create(bytes);
           }
           _rawDatagramSocket?.writeEventsEnabled = true;
           break;
