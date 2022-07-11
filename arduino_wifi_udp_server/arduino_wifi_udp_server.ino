@@ -6,6 +6,8 @@ AsyncUDP udp;
 char packetBuffer[255];
 
 unsigned int localPort = 1234;
+byte data[14] = {  0xaa, 0xbb, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                    0x00, 0x34, 0xcc, 0xdd };
 
 const char *ssid = "HiAp";  
 const char *password = "BB9ESERVER";
@@ -38,8 +40,9 @@ void setup() {
             Serial.write(packet.data(), packet.length());
             Serial.println();
             //reply to the client
-            packet.printf("Got %u bytes of data", packet.length());
+//            packet.printf("Got %u bytes of data", packet.length());
                      // wait for a second
+            udp.broadcast(data, 14);
             digitalWrite(LED_BUILTIN, LOW);    // turn the LED off by making the voltage LOW
             delay(10);               
 

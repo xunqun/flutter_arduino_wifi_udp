@@ -11,12 +11,13 @@ class UdpManager extends ChangeNotifier {
   bool _isConnected = true;
   int _progress = 0;
 
-  set progress(value){
-    if(_progress != value) {
+  set progress(value) {
+    if (_progress != value) {
       _progress = value;
       notifyListeners();
     }
   }
+
   get progress => _progress;
 
   set isConnected(value) {
@@ -33,18 +34,25 @@ class UdpManager extends ChangeNotifier {
     _rawDatagramSocket?.close();
     _rawDatagramSocket = null;
     _rawDatagramSocket = socket;
+    _rawDatagramSocket?.writeEventsEnabled = true;
     _rawDatagramSocket?.listen((event) {
       switch (event) {
         case RawSocketEvent.read:
           Datagram? dg = _rawDatagramSocket?.receive();
           if (dg != null) {
             List<int> bytes = dg.data.toList();
-            logManager.addReceiveRaw(bytes);
-            // var ack = AckCommand.create(bytes);
+
+            var ack = AckCommand.create(bytes);
+            if (ack == null) {
+              // logManager.addReceiveRaw(bytes);
+            } else {
+              logManager.addReceiveRaw(bytes, msg: "ACK");
+            }
           }
-          _rawDatagramSocket?.writeEventsEnabled = true;
+
           break;
         case RawSocketEvent.write:
+
           break;
         case RawSocketEvent.closed:
           print('Client disconnected.');
@@ -55,10 +63,8 @@ class UdpManager extends ChangeNotifier {
 
   get rawDatagramSocket => _rawDatagramSocket;
 
-
   write(List<int> data) {
-    rawDatagramSocket?.send(
-        data, InternetAddress('192.168.4.255'), 1234);
+    rawDatagramSocket?.send(data, InternetAddress('192.168.4.255'), 1234);
   }
 
   close() {

@@ -6,7 +6,7 @@ class AckCommand{
   var count = 0;
   var checksum = 0;
   var finished = 0;
-  
+
   AckCommand(List<int> raw){
     complete = raw[3];
     resendRequired = raw[5];
@@ -15,5 +15,18 @@ class AckCommand{
     count = raw[8];
     checksum = raw[9];
     finished = raw[10];
+  }
+
+  static AckCommand? create(List<int> raw){
+
+    if(raw.length != 14){
+      return null;
+    }
+
+    if(raw[0] != 0xAA || raw[1] != 0xBB || raw[12] != 0xCC || raw[13] != 0xDD){
+      return null;
+    }
+
+    return AckCommand(raw);
   }
 }

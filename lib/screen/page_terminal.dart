@@ -13,7 +13,7 @@ class TerminalPage extends StatefulWidget {
 }
 
 class _TerminalPageState extends State<TerminalPage> {
-  final DateFormat dateFormatter = DateFormat('hh:mm:ss.SSS');
+  final DateFormat dateFormatter = DateFormat('mm:ss.SSS');
   final ScrollController _controller = ScrollController();
   String? error = null;
 
@@ -55,7 +55,8 @@ class _TerminalPageState extends State<TerminalPage> {
                   final String time = dateFormatter.format(log.time);
                   return ExpansionTile(
                     title: ListTile(
-                      leading: Text(time),
+                      leading: getIcon(log),
+                      trailing: Text(time, style: TextStyle(color: Colors.black),),
                       title: getTitle(log),
                       subtitle: Text(log.description ?? ''),
                     ),
@@ -117,13 +118,13 @@ class _TerminalPageState extends State<TerminalPage> {
   Widget getTitle(Log log) {
     if (log.type == LogType.sendraw) {
       return Text(
-        log.title ?? '',
-        style: TextStyle(fontSize: 14),
+        '送出 ${log.title ?? ''}',
+        style: TextStyle(fontSize: 14, color: Colors.blue),
       );
     } else if (log.type == LogType.receiveraw) {
       return Text(
-        log.title ?? '',
-        style: TextStyle(fontSize: 14),
+        '收到 ${log.title ?? ''}',
+        style: TextStyle(fontSize: 14, color: Colors.green),
       );
     } else {
       return Text(log.title ?? '', style: TextStyle(fontSize: 14));
@@ -136,5 +137,15 @@ class _TerminalPageState extends State<TerminalPage> {
 
   void scrollTop(){
     _controller.jumpTo(0);
+  }
+
+  getIcon(Log log) {
+    if(log.type == LogType.sendraw){
+      return Icon( Icons.arrow_left_rounded);
+    }else if(log.type == LogType.receiveraw){
+      return Icon( Icons.arrow_right_rounded);
+    } else{
+      return Icon(Icons.circle_outlined);
+    }
   }
 }
