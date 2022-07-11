@@ -19,8 +19,8 @@ void setup() {
 //  Udp.begin(localPort);
  if(udp.listen(1234)) {
   Serial.print("UDP Listening on IP: ");
-        digitalWrite(LED_BUILTIN, HIGH);digitalWrite(LED_BUILTIN, HIGH);
-        Serial.println(WiFi.localIP());
+        digitalWrite(LED_BUILTIN, HIGH);
+        Serial.println(WiFi.softAPIP());
         udp.onPacket([](AsyncUDPPacket packet) {
             digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
             delay(10);
