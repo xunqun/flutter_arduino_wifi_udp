@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_wifi_udp/command/incommand.dart';
 import 'package:flutter_wifi_udp/manager/log_manager.dart';
+import 'package:wifi_iot/wifi_iot.dart';
 
 UdpManager udpManager = UdpManager();
 
@@ -31,6 +32,7 @@ class UdpManager extends ChangeNotifier {
   RawDatagramSocket? _rawDatagramSocket = null;
 
   set rawDatagramSocket(socket) {
+    WiFiForIoTPlugin.forceWifiUsage(true);
     _rawDatagramSocket?.close();
     _rawDatagramSocket = null;
     _rawDatagramSocket = socket;
@@ -69,5 +71,6 @@ class UdpManager extends ChangeNotifier {
 
   close() {
     rawDatagramSocket?.close();
+    WiFiForIoTPlugin.forceWifiUsage(false);
   }
 }

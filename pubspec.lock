@@ -349,7 +349,7 @@ packages:
       name: wifi_iot
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.3.15+2"
+    version: "0.3.16"
   win32:
     dependency: transitive
     description:
