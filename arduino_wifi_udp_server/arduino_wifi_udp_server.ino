@@ -41,7 +41,8 @@ void setup() {
             Serial.println();
             //reply to the client
 //            packet.printf("Got %u bytes of data", packet.length());
-                     // wait for a second
+                   
+//            udp.write(data, 14);
             udp.broadcast(data, 14);
             digitalWrite(LED_BUILTIN, LOW);    // turn the LED off by making the voltage LOW
             delay(10);               

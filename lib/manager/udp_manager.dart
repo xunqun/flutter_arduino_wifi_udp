@@ -9,7 +9,7 @@ UdpManager udpManager = UdpManager();
 
 class UdpManager extends ChangeNotifier {
   /// Target AP connect state
-  bool _isConnected = true;
+  bool _isConnected = false;
   int _progress = 0;
 
   set progress(value) {
@@ -32,7 +32,7 @@ class UdpManager extends ChangeNotifier {
   RawDatagramSocket? _rawDatagramSocket = null;
 
   set rawDatagramSocket(socket) {
-    WiFiForIoTPlugin.forceWifiUsage(true);
+
     _rawDatagramSocket?.close();
     _rawDatagramSocket = null;
     _rawDatagramSocket = socket;
@@ -59,6 +59,7 @@ class UdpManager extends ChangeNotifier {
         case RawSocketEvent.closed:
           print('Client disconnected.');
           logManager.addEvent('Client disconnected.');
+          udpManager.isConnected = false;
       }
     });
   }
@@ -66,7 +67,8 @@ class UdpManager extends ChangeNotifier {
   get rawDatagramSocket => _rawDatagramSocket;
 
   write(List<int> data) {
-    rawDatagramSocket?.send(data, InternetAddress('192.168.4.255'), 1234);
+    rawDatagramSocket?.broadcastEnabled = false;
+    rawDatagramSocket?.send(data, InternetAddress('192.168.4.1'), 1234);
   }
 
   close() {

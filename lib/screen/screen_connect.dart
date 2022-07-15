@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
@@ -62,12 +63,12 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
                   child: Text('hello')),
               Spacer(),
               MaterialButton(
-                  onPressed: () {
+                  onPressed: udpManager.isConnected ? () {
                     Navigator.of(context).push(MaterialPageRoute(builder: (c) => HomeScreen()));
-                  },
+                  } : null,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: [Icon(Icons.home), Text('GO')],
+                    children: udpManager.isConnected ? [Icon(Icons.home), Text('GO')] : [Icon(Icons.disabled_by_default), Text('未連線')],
                   ))
             ],
           ),
@@ -77,16 +78,24 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
   }
 
   void connect() async{
-    udpManager.isConnected = await WiFiForIoTPlugin.connect(ssidController.text,
-        password: pwController.text, joinOnce: true, security: NetworkSecurity.WPA);
 
+    await WiFiForIoTPlugin.connect(ssidController.text,
+        password: pwController.text, joinOnce: true, security: NetworkSecurity.WPA);
+    udpManager.isConnected = await WiFiForIoTPlugin.isConnected();
     if(udpManager.isConnected){
+      WiFiForIoTPlugin.forceWifiUsage(true);
+      await Future.delayed(Duration(seconds: 1));
       var addressesIListenFrom = InternetAddress.anyIPv4;
+      // var addressesIListenFrom = InternetAddress('192.168.4.100');
       int portIListenOn = 1234; //0 is random
+
       RawDatagramSocket.bind(addressesIListenFrom, portIListenOn).then((RawDatagramSocket socket) {
-        socket.broadcastEnabled = true;
         udpManager.rawDatagramSocket = socket;
-        udpManager.write(Utf8Codec().encode('Connected to client'));
+        // udpManager.write(Utf8Codec().encode('Connected to client'));
+        udpManager.isConnected = true;
+      }).catchError((e){
+        log(e.toString());
+        udpManager.isConnected = false;
       });
     }
   }
