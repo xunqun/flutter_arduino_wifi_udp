@@ -16,6 +16,7 @@ void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
   Serial.begin(115200);
   WiFi.softAP(ssid, password);  // ESP-32 as access point
+  delay(100);
 //  Udp.begin(localPort);
  if(udp.listen(1234)) {
   Serial.print("UDP Listening on IP: ");
@@ -41,9 +42,9 @@ void setup() {
             Serial.println();
             //reply to the client
 //            packet.printf("Got %u bytes of data", packet.length());
-                   
-//            udp.write(data, 14);
-            udp.broadcast(data, 14);
+              packet.write(data, 14);
+//            udp.write(data, 14); // unicast in case
+//            udp.broadcast(data, 14);
             digitalWrite(LED_BUILTIN, LOW);    // turn the LED off by making the voltage LOW
             delay(10);               
 

@@ -49,7 +49,6 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
               ElevatedButton(
                   onPressed: () {
                     connect();
-
                   },
                   child: Text('Wifi AP')),
               Padding(
@@ -63,12 +62,12 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
                   child: Text('hello')),
               Spacer(),
               MaterialButton(
-                  onPressed: udpManager.isConnected ? () {
+                  onPressed:  () {
                     Navigator.of(context).push(MaterialPageRoute(builder: (c) => HomeScreen()));
-                  } : null,
+                  } ,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: udpManager.isConnected ? [Icon(Icons.home), Text('GO')] : [Icon(Icons.disabled_by_default), Text('未連線')],
+                    children: [Icon(Icons.home), Text('GO')],
                   ))
             ],
           ),

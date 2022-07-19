@@ -50,3 +50,17 @@ class DataCommand {
 
   get bytes => begin + ByteTool.int32bytes(length, 1) + raw + ByteTool.int32bytes(counter, 2) + ByteTool.int32bytes(checkSum, 1) + end;
 }
+
+class VolumeCommand{
+  int volume;
+  VolumeCommand(this.volume);
+  get bytes => utf8.encode(string);
+  get string => 'SetVolume=$volume;';
+}
+
+class BlinkCommand{
+  int blink;
+  BlinkCommand(this.blink);
+  get bytes => utf8.encode(string);
+  get string => 'SetBlinkTime=$blink;';
+}

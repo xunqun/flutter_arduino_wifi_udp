@@ -33,10 +33,11 @@ class UdpManager extends ChangeNotifier {
 
   set rawDatagramSocket(socket) {
 
-    _rawDatagramSocket?.close();
-    _rawDatagramSocket = null;
+    // _rawDatagramSocket?.close();
+    // _rawDatagramSocket = null;
     _rawDatagramSocket = socket;
     _rawDatagramSocket?.writeEventsEnabled = true;
+    _rawDatagramSocket?.readEventsEnabled = true;
     _rawDatagramSocket?.listen((event) {
       switch (event) {
         case RawSocketEvent.read:
@@ -46,7 +47,7 @@ class UdpManager extends ChangeNotifier {
 
             var ack = AckCommand.create(bytes);
             if (ack == null) {
-              // logManager.addReceiveRaw(bytes);
+              logManager.addReceiveRaw(bytes);
             } else {
               logManager.addReceiveRaw(bytes, msg: "ACK");
             }
