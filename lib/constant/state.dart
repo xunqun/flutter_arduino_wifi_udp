@@ -5,15 +5,15 @@ enum ConnectState{
 }
 
 // Singleton
-State state = State();
+AppState state = AppState();
 
-class State{
+class AppState{
   StreamController<ConnectState> _connectStateController = StreamController<ConnectState>();
   StreamSink<ConnectState> get _connectStateSink => _connectStateController.sink;
-  Stream<ConnectState> get _connectStateStream => _connectStateController.stream;
+  Stream<ConnectState> get connectStateStream => _connectStateController.stream;
   ConnectState connectState = ConnectState.idle;
 
-  State(){
+  AppState(){
     setState(ConnectState.idle);
   }
 

@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:math';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_wifi_udp/command/incommand.dart';
+import 'package:flutter_wifi_udp/constant/state.dart';
 import 'package:flutter_wifi_udp/manager/log_manager.dart';
 import 'package:wifi_iot/wifi_iot.dart';
 
@@ -30,51 +31,61 @@ class UdpManager extends ChangeNotifier {
   get isConnected => _isConnected;
 
   /// Socket of UDP connection
-  RawDatagramSocket? _rawDatagramSocket = null;
+  // RawDatagramSocket? _rawDatagramSocket = null;
+  Socket? _socket = null;
+  set socket(s){
+    _socket = s;
 
-  set rawDatagramSocket(socket) {
-
-    // _rawDatagramSocket?.close();
-    // _rawDatagramSocket = null;
-    _rawDatagramSocket = socket;
-    _rawDatagramSocket?.writeEventsEnabled = true;
-    _rawDatagramSocket?.readEventsEnabled = true;
-    _rawDatagramSocket?.listen((event) {
-      switch (event) {
-        case RawSocketEvent.read:
-          Datagram? dg = _rawDatagramSocket?.receive();
-          if (dg != null) {
-            List<int> bytes = dg.data.toList();
-
-            var ack = AckCommand.create(bytes);
-            if (ack == null) {
-              logManager.addReceiveRaw(bytes);
-            } else {
-              logManager.addReceiveRaw(bytes, msg: "ACK");
-            }
-          }
-
-          break;
-        case RawSocketEvent.write:
-
-          break;
-        case RawSocketEvent.closed:
-          print('Client disconnected.');
-          logManager.addEvent('Client disconnected.');
-          udpManager.isConnected = false;
-      }
-    });
   }
 
-  get rawDatagramSocket => _rawDatagramSocket;
+  // set rawDatagramSocket(socket) {
+  //
+  //   // _rawDatagramSocket?.close();
+  //   // _rawDatagramSocket = null;
+  //   _rawDatagramSocket = socket;
+  //   _rawDatagramSocket?.writeEventsEnabled = true;
+  //   _rawDatagramSocket?.readEventsEnabled = true;
+  //   _rawDatagramSocket?.listen((event) {
+  //     switch (event) {
+  //       case RawSocketEvent.read:
+  //         Datagram? dg = _rawDatagramSocket?.receive();
+  //         if (dg != null) {
+  //           List<int> bytes = dg.data.toList();
+  //
+  //           var ack = AckCommand.create(bytes);
+  //           if (ack == null) {
+  //             logManager.addReceiveRaw(bytes);
+  //           } else {
+  //             logManager.addReceiveRaw(bytes, msg: "ACK");
+  //           }
+  //         }
+  //
+  //         break;
+  //       case RawSocketEvent.write:
+  //
+  //         break;
+  //       case RawSocketEvent.closed:
+  //         print('Client disconnected.');
+  //         logManager.addEvent('Client disconnected.');
+  //         udpManager.isConnected = false;
+  //     }
+  //   });
+  // }
+
+  // get rawDatagramSocket => _rawDatagramSocket;
 
   write(List<int> data) {
-    rawDatagramSocket?.broadcastEnabled = false;
-    rawDatagramSocket?.send(data, InternetAddress('192.168.4.1'), 1234);
+    // rawDatagramSocket?.broadcastEnabled = false;
+    // rawDatagramSocket?.send(data, InternetAddress('192.168.4.1'), 1234);
+    // _socket?.add(data);
+    _socket?.write(data);
   }
 
   close() {
-    rawDatagramSocket?.close();
+    // rawDatagramSocket?.close();
+    _socket?.close();
+    _socket = null;
+    state.setState(ConnectState.idle);
     WiFiForIoTPlugin.forceWifiUsage(false);
   }
 }
