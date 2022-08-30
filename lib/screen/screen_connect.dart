@@ -20,6 +20,7 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
 
   final TextEditingController ssidController = TextEditingController(text: 'HiAp');
   final TextEditingController pwController = TextEditingController(text: 'BB9ESERVER');
+  String statusDescription = "未連線";
 
   @override
   Widget build(BuildContext context) {
@@ -50,7 +51,8 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
                   onPressed: () {
                     connect();
                   },
-                  child: Text('Wifi AP')),
+                  child: Text('開始連接')),
+              Text(statusDescription),
               Padding(
                 padding: const EdgeInsets.only(top: 32.0),
                 child: Text('2. 傳送 Hello 訊息', style: TextStyle(fontWeight: FontWeight.bold)),
@@ -60,6 +62,7 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
                     udpManager.write(const Utf8Codec().encode('Hello from client'));
                   },
                   child: Text('hello')),
+
               Spacer(),
               MaterialButton(
                   onPressed:  () {

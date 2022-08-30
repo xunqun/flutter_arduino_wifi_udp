@@ -42,9 +42,9 @@ void setup() {
             Serial.println();
             //reply to the client
 //            packet.printf("Got %u bytes of data", packet.length());
-              packet.write(data, 14);
+//            packet.write(data, 14);
 //            udp.write(data, 14); // unicast in case
-//            udp.broadcast(data, 14);
+            udp.broadcast(data, 14);
             digitalWrite(LED_BUILTIN, LOW);    // turn the LED off by making the voltage LOW
             delay(10);               
 
