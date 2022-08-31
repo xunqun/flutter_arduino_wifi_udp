@@ -77,7 +77,7 @@ class _FilePageState extends State<FilePage> {
                   });
                 },
                 onChangeEnd: (double value){
-                  var cmd = BlinkCommand(_blink.toInt());
+                  var cmd = BlinkTimeCommand(_blink.toInt());
                   udpManager.write(cmd.bytes);
                   logManager.addSendRaw(cmd.bytes, msg: 'SET BLINK', desc: cmd.string);
                   prefs?.setDouble('blink', _blink);

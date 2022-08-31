@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 class AckCommand{
   var complete = 0; // byte3, 0未完成接收,1完成接收
   var resendRequired = 0; // byte5, 0不需要重傳 1需要重傳
@@ -29,4 +31,30 @@ class AckCommand{
 
     return AckCommand(raw);
   }
+}
+
+class IsInitializationCommand{
+  IsInitializationCommand();
+  get bytes => utf8.encode(string);
+  get string => 'IsInitialization?';
+}
+
+class SetupCommand{
+  SetupCommand();
+  static SetupCommand? create(List<int> raw){
+    if(raw.length != 138){
+      return null;
+    }
+
+
+
+  }
+  get bytes => utf8.encode(string);
+  get string => 'Setup?';
+}
+
+class FileCommand{
+  FileCommand();
+  get bytes => utf8.encode(string);
+  get string => 'File?';
 }
