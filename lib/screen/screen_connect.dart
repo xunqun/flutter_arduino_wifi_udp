@@ -6,7 +6,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_wifi_udp/constant/state.dart';
 import 'package:flutter_wifi_udp/manager/udp_manager.dart';
-import 'package:flutter_wifi_udp/screen/screen_screen.dart';
+import 'package:flutter_wifi_udp/screen/screen_main.dart';
 import 'package:provider/src/provider.dart';
 import 'package:wifi_iot/wifi_iot.dart';
 
@@ -59,11 +59,14 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
                   SizedBox(
                     height: 48,
                     child: ElevatedButton(
-                        onPressed: connectState == ConnectState.tcpconnected
-                            ? () {
-                                Navigator.of(context).push(MaterialPageRoute(builder: (c) => HomeScreen()));
-                              }
-                            : null,
+                      onPressed: () {
+                        Navigator.of(context).push(MaterialPageRoute(builder: (c) => HomeScreen()));
+                      },
+                        // onPressed: connectState == ConnectState.tcpconnected
+                        //     ? () {
+                        //         Navigator.of(context).push(MaterialPageRoute(builder: (c) => HomeScreen()));
+                        //       }
+                        //     : null,
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [Icon(Icons.home), Text('GO')],
@@ -143,6 +146,7 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
   }
 
   Widget getAction(ConnectState state) {
+
     switch (state) {
       case ConnectState.idle:
         return ElevatedButton(
@@ -152,6 +156,7 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
             child: Text('開始連接'));
       case ConnectState.tcpconnecting:
       case ConnectState.wificonnecting:
+      case ConnectState.wificonnected:
         return ElevatedButton(onPressed: null, child: Text('...'));
       default:
         return ElevatedButton(

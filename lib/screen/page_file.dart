@@ -21,14 +21,8 @@ class FilePage extends StatefulWidget {
 
 class _FilePageState extends State<FilePage> {
   var progress = 0;
-  double _volume = 20.0;
-  double _blink = 600.0;
 
-  @override
-  void initState() {
-    initValue();
-    super.initState();
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -38,58 +32,7 @@ class _FilePageState extends State<FilePage> {
       ),
       body: Column(
         children: [
-          Row(
-            children: [
-              const Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Text('音量'),
-              ),
-              Slider(
-                onChanged: (double value) {
-                  setState(() {
-                    _volume = value;
-                  });
-                },
-                onChangeEnd: (double value) {
-                  var cmd = VolumeCommand(_volume.toInt());
-                  udpManager.write(cmd.bytes);
-                  logManager.addSendRaw(cmd.bytes, msg: 'SET VOLUME', desc: cmd.string);
-                  prefs?.setDouble('volume', _volume);
-                },
-                value: _volume,
-                min: 0,
-                max: 21,
-                label: '音量',
-              ),
-              Text('${_volume.toInt()}')
-            ],
-          ),
-          Row(
-            children: [
-              const Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Text('閃爍'),
-              ),
-              Slider(
-                onChanged: (double value) {
-                  setState(() {
-                    _blink = value;
-                  });
-                },
-                onChangeEnd: (double value){
-                  var cmd = BlinkTimeCommand(_blink.toInt());
-                  udpManager.write(cmd.bytes);
-                  logManager.addSendRaw(cmd.bytes, msg: 'SET BLINK', desc: cmd.string);
-                  prefs?.setDouble('blink', _blink);
-                },
-                value: _blink,
-                min: 600,
-                max: 850,
-                label: '閃爍',
-              ),
-              Text('${_blink.toInt()}')
-            ],
-          ),
+
           Divider(),
           Expanded(
             child: ListView(
@@ -210,12 +153,5 @@ class _FilePageState extends State<FilePage> {
     }
   }
 
-  SharedPreferences? prefs;
-  initValue() async {
-    prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _volume = prefs?.getDouble('volume') ?? 20.0;
-      _blink = prefs?.getDouble('blink') ?? 600.0;
-    });
-  }
+
 }
