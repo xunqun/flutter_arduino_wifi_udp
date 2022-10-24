@@ -1,7 +1,7 @@
 import 'dart:async';
 
 enum ConnectState{
-  idle, wificonnecting, wificonnected, tcpconnecting, tcpconnected,
+  idle, wificonnecting, wificonnected, tcpconnecting, tcpconnected, ftpconnecting, ftpconnected
 }
 
 // Singleton
@@ -22,6 +22,5 @@ class AppState{
       connectState = state;
       _connectStateSink.add(state);
     }
-
   }
 }

@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_wifi_udp/constant/state.dart';
+import 'package:flutter_wifi_udp/manager/ftp_manager.dart';
 import 'package:flutter_wifi_udp/manager/udp_manager.dart';
 import 'package:flutter_wifi_udp/screen/screen_main.dart';
 import 'package:provider/src/provider.dart';
@@ -18,8 +19,8 @@ class ConnectionScreen extends StatefulWidget {
 }
 
 class _ConnectionScreenState extends State<ConnectionScreen> {
-  final TextEditingController ssidController = TextEditingController(text: 'HiAp');
-  final TextEditingController pwController = TextEditingController(text: 'BB9ESERVER');
+  final TextEditingController ssidController = TextEditingController(text: 'KOSO flasher');
+  final TextEditingController pwController = TextEditingController(text: '00000000');
   String statusDescription = "未連線";
   ConnectState connectState = ConnectState.idle;
 
@@ -59,14 +60,9 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
                   SizedBox(
                     height: 48,
                     child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.of(context).push(MaterialPageRoute(builder: (c) => HomeScreen()));
-                      },
-                        // onPressed: connectState == ConnectState.tcpconnected
-                        //     ? () {
-                        //         Navigator.of(context).push(MaterialPageRoute(builder: (c) => HomeScreen()));
-                        //       }
-                        //     : null,
+                        onPressed: () {
+                          Navigator.of(context).push(MaterialPageRoute(builder: (c) => HomeScreen()));
+                        },
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [Icon(Icons.home), Text('GO')],
@@ -89,8 +85,8 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
 
       WiFiForIoTPlugin.forceWifiUsage(true);
       await Future.delayed(const Duration(seconds: 1));
-
-      bindTcp();
+      // await bindTcp();
+      await bindFtp();
     }
   }
 
@@ -99,9 +95,25 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
     WiFiForIoTPlugin.disconnect();
   }
 
-  void bindTcp() async {
+  Future bindFtp() async {
+    state.setState(ConnectState.ftpconnecting);
+    var success = await FtpManager.instance.connect() ?? false;
+    state.setState(success ? ConnectState.ftpconnected : ConnectState.idle);
+    try {
+      await FtpManager.instance.mkdir();
+      await Future.delayed(const Duration(seconds: 3));
+      await FtpManager.instance.deleteDirectory();
+      // await Future.delayed(const Duration(seconds: 3));
+      var list = await FtpManager.instance.listFiles();
+      print(list);
+    } catch (e) {
+      print(e.toString());
+    }
+  }
+
+  Future bindTcp() async {
     var addressesIListenFrom = InternetAddress.anyIPv4;
-    int portIListenOn = 1234; //0 is random
+    int portIListenOn = 2024; //0 is random
     state.setState(ConnectState.tcpconnecting);
     try {
       Socket socket = await Socket.connect('192.168.4.1', portIListenOn);
@@ -140,13 +152,15 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
         return '已連上Wifi';
       case ConnectState.tcpconnecting:
         return '正在建立TCP連線';
+      case ConnectState.ftpconnecting:
+        return '正在建立FTP連線';
       case ConnectState.tcpconnected:
+      case ConnectState.ftpconnected:
         return '連線成功';
     }
   }
 
   Widget getAction(ConnectState state) {
-
     switch (state) {
       case ConnectState.idle:
         return ElevatedButton(
