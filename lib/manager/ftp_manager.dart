@@ -2,7 +2,7 @@
 
 import 'package:ftpconnect/ftpconnect.dart';
 
-import '../stream/ftp_files.dart';
+import '../stream/ftp_observer.dart';
 
 class FtpManager {
   static var instance = FtpManager();
@@ -19,12 +19,14 @@ class FtpManager {
   }
 
   Future<bool?> disconnect() async{
+    FtpFilesObserver.instance().close();
     return ftpConnect?.disconnect();
+
   }
 
   listFiles() {
     ftpConnect?.listDirectoryContent().then((value) {
-      FtpFiles.setFiles(value);
+      FtpFilesObserver.instance().setFiles(value);
     });
   }
 

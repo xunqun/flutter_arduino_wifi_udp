@@ -85,7 +85,6 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
 
       WiFiForIoTPlugin.forceWifiUsage(true);
       await Future.delayed(const Duration(seconds: 1));
-      // await bindTcp();
       await bindFtp();
     }
   }

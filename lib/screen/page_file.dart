@@ -1,14 +1,13 @@
 import 'dart:convert';
-import 'dart:io';
-
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_wifi_udp/manager/ftp_manager.dart';
 import 'package:flutter_wifi_udp/manager/upload_manager.dart';
-import 'package:flutter_wifi_udp/stream/ftp_files.dart';
 import 'package:sn_progress_dialog/sn_progress_dialog.dart';
 import 'package:ftpconnect/src/dto/ftp_entry.dart';
+
+import '../stream/ftp_observer.dart';
 
 var busy = false;
 
@@ -174,7 +173,7 @@ class _FtpBrowserState extends State<FtpBrowser> {
     return Container(
       color: Colors.lightBlueAccent,
       child: StreamBuilder<List<FTPEntry>>(
-          stream: FtpFiles.ftpFilesStream,
+          stream: FtpFilesObserver.instance().stream,
           builder: (context, snapshot) {
             var files = snapshot.data ?? [];
             return ListView.builder(
