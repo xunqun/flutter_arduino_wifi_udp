@@ -1,7 +1,10 @@
-import 'package:flutter/widgets.dart';
+
+
 import 'package:ftpconnect/ftpconnect.dart';
 
-class FtpManager extends ChangeNotifier {
+import '../stream/ftp_files.dart';
+
+class FtpManager {
   static var instance = FtpManager();
   final _address = '192.168.4.1';
   final _port = 21;
@@ -19,7 +22,12 @@ class FtpManager extends ChangeNotifier {
     return ftpConnect?.disconnect();
   }
 
-  listFiles() => ftpConnect?.listDirectoryContentOnlyNames();
+  listFiles() {
+    ftpConnect?.listDirectoryContent().then((value) {
+      FtpFiles.setFiles(value);
+    });
+  }
+
   mkdir() => ftpConnect?.makeDirectory('test');
   deleteDirectory() => ftpConnect?.deleteDirectory('test');
   currentDirectory() => ftpConnect?.currentDirectory();

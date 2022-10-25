@@ -29,7 +29,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-    
+
   permission_handler: ^8.3.0
   provider: ^6.0.2
   shared_preferences: ^2.0.13
@@ -43,6 +43,7 @@ dependencies:
   sn_progress_dialog: ^1.0.8
   wifi_iot: ^0.3.16
   ftpconnect: ^2.0.2
+
 
 dev_dependencies:
   flutter_test:

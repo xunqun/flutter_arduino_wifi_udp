@@ -100,12 +100,7 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
     var success = await FtpManager.instance.connect() ?? false;
     state.setState(success ? ConnectState.ftpconnected : ConnectState.idle);
     try {
-      await FtpManager.instance.mkdir();
-      await Future.delayed(const Duration(seconds: 3));
-      await FtpManager.instance.deleteDirectory();
-      // await Future.delayed(const Duration(seconds: 3));
-      var list = await FtpManager.instance.listFiles();
-      print(list);
+      await FtpManager.instance.listFiles();
     } catch (e) {
       print(e.toString());
     }

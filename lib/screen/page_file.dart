@@ -1,14 +1,14 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_wifi_udp/command/outcommand.dart';
-import 'package:flutter_wifi_udp/manager/log_manager.dart';
-import 'package:flutter_wifi_udp/manager/udp_manager.dart';
+import 'package:flutter_wifi_udp/manager/ftp_manager.dart';
 import 'package:flutter_wifi_udp/manager/upload_manager.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_wifi_udp/stream/ftp_files.dart';
 import 'package:sn_progress_dialog/sn_progress_dialog.dart';
+import 'package:ftpconnect/src/dto/ftp_entry.dart';
 
 var busy = false;
 
@@ -22,19 +22,26 @@ class FilePage extends StatefulWidget {
 class _FilePageState extends State<FilePage> {
   var progress = 0;
 
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Upload file'),
+        actions: [
+          IconButton(onPressed: (){
+            FtpManager.instance.listFiles();
+          }, icon: const Icon(Icons.refresh))
+        ],
       ),
       body: Column(
         children: [
-
+          Expanded(
+            child: FtpBrowser(),
+            flex: 1,
+          ),
           Divider(),
           Expanded(
+            flex: 1,
             child: ListView(
               children: [
                 ListTile(
@@ -152,6 +159,33 @@ class _FilePageState extends State<FilePage> {
       // User canceled the picker
     }
   }
+}
 
+class FtpBrowser extends StatefulWidget {
+  const FtpBrowser({Key? key}) : super(key: key);
 
+  @override
+  State<FtpBrowser> createState() => _FtpBrowserState();
+}
+
+class _FtpBrowserState extends State<FtpBrowser> {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.lightBlueAccent,
+      child: StreamBuilder<List<FTPEntry>>(
+          stream: FtpFiles.ftpFilesStream,
+          builder: (context, snapshot) {
+            var files = snapshot.data ?? [];
+            return ListView.builder(
+                itemCount: files.length,
+                itemBuilder: (context, index) {
+                  return ListTile(
+                    leading: Icon(files[index].type == FTPEntryType.FILE ? Icons.file_present : Icons.folder),
+                    title: Text(utf8.decode(files[index].name.runes.toList())),
+                  );
+                });
+          }),
+    );
+  }
 }
