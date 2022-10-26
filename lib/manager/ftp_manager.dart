@@ -3,7 +3,8 @@
 import 'dart:io';
 
 import 'package:ftpconnect/ftpconnect.dart';
-
+import 'package:path_provider/path_provider.dart';
+import 'package:ftpconnect/src/dto/ftp_entry.dart';
 import '../stream/ftp_observer.dart';
 
 class FtpManager {
@@ -13,6 +14,7 @@ class FtpManager {
   final _user = 'KOSO';
   final _password = '0000';
   FTPConnect? ftpConnect;
+  List<FTPEntry> _files = [];
 
   Future<bool?> connect() async {
     ftpConnect = FTPConnect(_address, user: _user, pass: _password, port: _port, timeout: 30, debug: true);
@@ -26,11 +28,14 @@ class FtpManager {
 
   }
 
-  listFiles() {
+  refreshFiles() {
     ftpConnect?.listDirectoryContent().then((value) {
+      _files = value;
       FtpFilesObserver.instance().setFiles(value);
     });
   }
+
+  List<FTPEntry> getFiles() => _files;
 
   mkdir() => ftpConnect?.makeDirectory('test');
   deleteDirectory(String path) => ftpConnect?.deleteDirectory(path);

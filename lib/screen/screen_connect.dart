@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_wifi_udp/constant/state.dart';
 import 'package:flutter_wifi_udp/manager/ftp_manager.dart';
@@ -54,7 +55,9 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
                     controller: pwController,
                     decoration: InputDecoration(hintText: 'AP Password'),
                   ),
-                  SizedBox(height: 16,),
+                  SizedBox(
+                    height: 16,
+                  ),
                   SizedBox(width: double.infinity, height: 56, child: getAction(connectState)),
                   Text(statusDescription),
                   const Spacer(),
@@ -78,31 +81,38 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
 
   void connect() async {
     state.setState(ConnectState.wificonnecting);
-    await WiFiForIoTPlugin.connect(ssidController.text,
-        password: pwController.text, joinOnce: true, security: NetworkSecurity.WPA);
-    udpManager.isConnected = await WiFiForIoTPlugin.isConnected();
+    var success = await WiFiForIoTPlugin.connect(ssidController.text,
+            password: pwController.text, joinOnce: true, security: NetworkSecurity.WPA)
+        .timeout(Duration(seconds: 10), onTimeout: () => false);
+    udpManager.isConnected = success;
     if (udpManager.isConnected) {
       state.setState(ConnectState.wificonnected);
 
       WiFiForIoTPlugin.forceWifiUsage(true);
       await Future.delayed(const Duration(seconds: 1));
       await bindFtp();
+    } else {
+      state.setState(ConnectState.idle);
     }
   }
 
   void disconnect() {
-    udpManager.close();
+    FtpManager.instance.disconnect();
     WiFiForIoTPlugin.disconnect();
+    state.setState(ConnectState.idle);
   }
 
   Future bindFtp() async {
     state.setState(ConnectState.ftpconnecting);
-    var success = await FtpManager.instance.connect() ?? false;
+    var success = await FtpManager.instance.connect().timeout(const Duration(seconds: 6), onTimeout: () => false) ?? false;
     state.setState(success ? ConnectState.ftpconnected : ConnectState.idle);
-    try {
-      await FtpManager.instance.listFiles();
-    } catch (e) {
-      print(e.toString());
+    if (success) {
+      try {
+        await FtpManager.instance.refreshFiles();
+      } catch (e) {
+        print(e.toString());
+      }
+      Navigator.of(context).push(MaterialPageRoute(builder: (c) => const HomeScreen()));
     }
   }
 
@@ -119,12 +129,16 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
           }
         },
         onError: (error) {
-          print(error);
+          if (kDebugMode) {
+            print(error);
+          }
           socket.destroy();
           state.setState(ConnectState.idle);
         },
         onDone: () {
-          print('Server left.');
+          if (kDebugMode) {
+            print('Server left.');
+          }
           socket.destroy();
           state.setState(ConnectState.idle);
         },
@@ -163,7 +177,7 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
               connect();
             },
             child: Text('開始連接'));
-      case ConnectState.tcpconnecting:
+      case ConnectState.ftpconnecting:
       case ConnectState.wificonnecting:
       case ConnectState.wificonnected:
         return ElevatedButton(onPressed: null, child: Text('...'));

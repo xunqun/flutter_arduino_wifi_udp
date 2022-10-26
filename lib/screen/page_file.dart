@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_wifi_udp/manager/ftp_manager.dart';
+import 'package:flutter_wifi_udp/utility/string_tool.dart';
 import 'package:intl/intl.dart';
 import 'package:ftpconnect/src/dto/ftp_entry.dart';
 
@@ -27,7 +28,7 @@ class _FilePageState extends State<FilePage> {
         actions: [
           IconButton(
               onPressed: () {
-                FtpManager.instance.listFiles();
+                FtpManager.instance.refreshFiles();
               },
               icon: const Icon(Icons.refresh))
         ],
@@ -61,7 +62,7 @@ class _FilePageState extends State<FilePage> {
     setState(() {
       busy = false;
     });
-    FtpManager.instance.listFiles();
+    FtpManager.instance.refreshFiles();
   }
 
   void pickFile() async {
@@ -77,7 +78,7 @@ class _FilePageState extends State<FilePage> {
       setState(() {
         busy = false;
       });
-      FtpManager.instance.listFiles();
+      FtpManager.instance.refreshFiles();
     }
   }
 }
@@ -109,13 +110,13 @@ class _FtpBrowserState extends State<FtpBrowser> {
                     var time = DateFormat('yyyy/MM/dd HH:mm:ss').format(files[index].modifyTime!);
                     return ListTile(
                       leading: Icon(files[index].type == FTPEntryType.FILE ? Icons.file_copy : Icons.folder),
-                      title: Text(utf8.decode(files[index].name.runes.toList())),
+                      title: Text(utf8Decode(files[index].name)),
                       subtitle: Text(time),
                       trailing: IconButton(
                         icon: const Icon(Icons.close, size: 18,),
                         onPressed: () async {
-                          await FtpManager.instance.deleteFile(utf8.decode(files[index].name.runes.toList()));
-                          FtpManager.instance.listFiles();
+                          await FtpManager.instance.deleteFile(utf8Decode(files[index].name));
+                          FtpManager.instance.refreshFiles();
                         },
                       ),
                     );

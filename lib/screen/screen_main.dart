@@ -22,7 +22,7 @@ class _HomeScreenState extends State<HomeScreen> {
         type: BottomNavigationBarType.fixed,
         currentIndex: _index,
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.file_copy), label: 'File'),
+          BottomNavigationBarItem(icon: Icon(Icons.file_copy), label: 'FTP File'),
           BottomNavigationBarItem(icon: Icon(Icons.tune), label: 'Controller'),
           BottomNavigationBarItem(icon: Icon(Icons.terminal), label: 'Log'),
           BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings')
