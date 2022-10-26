@@ -1,5 +1,7 @@
 
 
+import 'dart:io';
+
 import 'package:ftpconnect/ftpconnect.dart';
 
 import '../stream/ftp_observer.dart';
@@ -31,7 +33,9 @@ class FtpManager {
   }
 
   mkdir() => ftpConnect?.makeDirectory('test');
-  deleteDirectory() => ftpConnect?.deleteDirectory('test');
+  deleteDirectory(String path) => ftpConnect?.deleteDirectory(path);
+  deleteFile(String path) => ftpConnect?.deleteFile(path);
   currentDirectory() => ftpConnect?.currentDirectory();
-
+  Future<bool>? download(String remotePath, String localPath) => ftpConnect?.downloadFileWithRetry(remotePath, File(localPath));
+  Future<bool>? upload(String uploadPath) => ftpConnect?.uploadFileWithRetry(File(uploadPath));
 }

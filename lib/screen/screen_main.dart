@@ -13,7 +13,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   var _index = 0;
-  final _pages = const [TerminalPage(),  ControllerPage(), FilePage(), SettingPage()];
+  final _pages = const [FilePage(), ControllerPage(), TerminalPage(), SettingPage()];
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -22,9 +22,9 @@ class _HomeScreenState extends State<HomeScreen> {
         type: BottomNavigationBarType.fixed,
         currentIndex: _index,
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Terminal'),
-          BottomNavigationBarItem(icon: Icon(Icons.tune), label: 'Controller'),
           BottomNavigationBarItem(icon: Icon(Icons.file_copy), label: 'File'),
+          BottomNavigationBarItem(icon: Icon(Icons.tune), label: 'Controller'),
+          BottomNavigationBarItem(icon: Icon(Icons.terminal), label: 'Log'),
           BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings')
         ],
         onTap: (i){

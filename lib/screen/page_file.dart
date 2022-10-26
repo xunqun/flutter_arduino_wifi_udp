@@ -1,10 +1,8 @@
 import 'dart:convert';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_wifi_udp/manager/ftp_manager.dart';
-import 'package:flutter_wifi_udp/manager/upload_manager.dart';
-import 'package:sn_progress_dialog/sn_progress_dialog.dart';
+import 'package:intl/intl.dart';
 import 'package:ftpconnect/src/dto/ftp_entry.dart';
 
 import '../stream/ftp_observer.dart';
@@ -25,137 +23,61 @@ class _FilePageState extends State<FilePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Upload file'),
+        title: const Text('FTP files'),
         actions: [
-          IconButton(onPressed: (){
-            FtpManager.instance.listFiles();
-          }, icon: const Icon(Icons.refresh))
+          IconButton(
+              onPressed: () {
+                FtpManager.instance.listFiles();
+              },
+              icon: const Icon(Icons.refresh))
         ],
       ),
       body: Column(
         children: [
-          Expanded(
+          const Expanded(
             child: FtpBrowser(),
             flex: 1,
           ),
-          Divider(),
-          Expanded(
-            flex: 1,
-            child: ListView(
-              children: [
-                ListTile(
-                  leading: Icon(Icons.music_note),
-                  title: Text('the_mini_vandals.mp3'),
-                  subtitle: Text('4.6MB'),
-                  trailing: busy
-                      ? CircularProgressIndicator()
-                      : IconButton(
-                          icon: Icon(Icons.send_to_mobile),
-                          onPressed: () {
-                            setState(() {
-                              busy = true;
-                            });
-                            upload(context, 'assets/the_mini_vandals.mp3', 'mp3');
-                          },
-                        ),
-                ),
-                ListTile(
-                  leading: Icon(Icons.music_note),
-                  title: Text('levelup.wav'),
-                  subtitle: Text('136KB'),
-                  trailing: busy
-                      ? CircularProgressIndicator()
-                      : IconButton(
-                          icon: Icon(Icons.send_to_mobile),
-                          onPressed: () {
-                            setState(() {
-                              busy = true;
-                            });
-
-                            upload(context, 'assets/levelup.wav', 'wav');
-                          },
-                        ),
-                ),
-                ListTile(
-                  leading: Icon(Icons.photo),
-                  title: Text('android.png'),
-                  subtitle: Text('2KB'),
-                  trailing: busy
-                      ? CircularProgressIndicator()
-                      : IconButton(
-                          icon: Icon(Icons.send_to_mobile),
-                          onPressed: () {
-                            setState(() {
-                              busy = true;
-                            });
-                            upload(context, 'assets/android.png', 'png');
-                          },
-                        ),
-                ),
-                ListTile(
-                  leading: Icon(Icons.folder_open),
-                  title: Text('其他檔案'),
-                  subtitle: Text('找裝置中的檔案'),
-                  trailing: busy
-                      ? CircularProgressIndicator()
-                      : IconButton(
-                          icon: Icon(Icons.search),
-                          onPressed: () {
-                            pickFile();
-                          },
-                        ),
-                ),
-              ],
-            ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.folder_open),
+            title: const Text('上傳檔案'),
+            subtitle: const Text('找裝置中的檔案'),
+            trailing: busy ? const CircularProgressIndicator() : const Icon(Icons.search),
+            onTap: busy
+                ? null
+                : () {
+                    pickFile();
+                  },
           ),
         ],
       ),
     );
   }
 
-  ProgressDialog? pd;
-
   void upload(BuildContext context, String path, String ext) async {
-    pd = ProgressDialog(context: context);
-    pd!.show(
-      max: 100,
-      msg: "傳送中...",
-      progressType: ProgressType.valuable,
-    );
-    ByteData data = await rootBundle.load(path);
-    await uploadManager.startTask(data.buffer.asInt8List(), ext, returnsAFunction());
-    pd?.close();
+
+    await FtpManager.instance.upload(path);
     setState(() {
       busy = false;
     });
+    FtpManager.instance.listFiles();
   }
-
-  Function(int) returnsAFunction() => (int x) {
-        pd?.update(value: x);
-      };
 
   void pickFile() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(withData: true);
-
     if (result != null) {
-      pd = ProgressDialog(context: context);
-      pd!.show(
-        max: 100,
-        msg: "傳輸中...",
-        progressType: ProgressType.valuable,
-      );
       setState(() {
         busy = true;
       });
-      var platformfile = result.files.single;
-      await uploadManager.startTask(
-          platformfile.bytes!.toList(growable: false), platformfile.extension!, returnsAFunction());
-      pd?.close();
+      var path = result.files.single.path;
+      if (path != null) {
+        await FtpManager.instance.upload(path);
+      }
       setState(() {
         busy = false;
       });
-    } else {
-      // User canceled the picker
+      FtpManager.instance.listFiles();
     }
   }
 }
@@ -168,23 +90,36 @@ class FtpBrowser extends StatefulWidget {
 }
 
 class _FtpBrowserState extends State<FtpBrowser> {
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: Colors.lightBlueAccent,
-      child: StreamBuilder<List<FTPEntry>>(
-          stream: FtpFilesObserver.instance().stream,
-          builder: (context, snapshot) {
-            var files = snapshot.data ?? [];
-            return ListView.builder(
-                itemCount: files.length,
-                itemBuilder: (context, index) {
-                  return ListTile(
-                    leading: Icon(files[index].type == FTPEntryType.FILE ? Icons.file_present : Icons.folder),
-                    title: Text(utf8.decode(files[index].name.runes.toList())),
-                  );
-                });
-          }),
-    );
+    return StreamBuilder<List<FTPEntry>>(
+        stream: FtpFilesObserver.instance().stream,
+        initialData: FtpFilesObserver.instance().getFiles(),
+        builder: (context, snapshot) {
+          var files = snapshot.data ?? [];
+          return files.isEmpty
+              ? const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Text('沒有檔案'),
+                )
+              : ListView.builder(
+                  itemCount: files.length,
+                  itemBuilder: (context, index) {
+                    var time = DateFormat('yyyy/MM/dd HH:mm:ss').format(files[index].modifyTime!);
+                    return ListTile(
+                      leading: Icon(files[index].type == FTPEntryType.FILE ? Icons.file_copy : Icons.folder),
+                      title: Text(utf8.decode(files[index].name.runes.toList())),
+                      subtitle: Text(time),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.close, size: 18,),
+                        onPressed: () async {
+                          await FtpManager.instance.deleteFile(utf8.decode(files[index].name.runes.toList()));
+                          FtpManager.instance.listFiles();
+                        },
+                      ),
+                    );
+                  });
+        });
   }
 }

@@ -54,7 +54,8 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
                     controller: pwController,
                     decoration: InputDecoration(hintText: 'AP Password'),
                   ),
-                  SizedBox(width: double.infinity, child: getAction(connectState)),
+                  SizedBox(height: 16,),
+                  SizedBox(width: double.infinity, height: 56, child: getAction(connectState)),
                   Text(statusDescription),
                   const Spacer(),
                   SizedBox(
