@@ -39,6 +39,16 @@ class _ControllerPageState extends State<ControllerPage> {
   bool _enableBlinkSound = false;
   String _selectedBootSound = '';
   String _selectedBlinkSound = '';
+  String _bleName = 'asdf';
+  String _wifiSsid = 'asdf';
+  String _wifiPw = 'asdf';
+  var _wifiOn = false;
+  var _playSound = '';
+  var _lightError = false;
+  var _lightLearning = false;
+  var _bleUnbound = false;
+  var _flashSize = 0;
+  var _version = 'unknow';
 
   Map<String, dynamic>? _settings;
 
@@ -49,6 +59,17 @@ class _ControllerPageState extends State<ControllerPage> {
     _enableBlinkSound = map['Blink_Sound_Mode'] == 1;
     _selectedBootSound = map['Boot_Sound'];
     _selectedBlinkSound = map['Blink_Sound'];
+
+    _bleName = map.containsKey('BLEName') ? map['BLEName'] : '';
+    _wifiSsid = map.containsKey('WiFiSSID') ? map['WiFiSSID'] : '';
+    _wifiPw = map.containsKey('WiFiPwd') ? map['WiFiPwd'] : '';
+    _wifiOn = map.containsKey('WiFiStatus') ? map['WiFiStatus'] : false;
+    _playSound = map.containsKey('PlaySound') ? map['PlaySound'] : '';
+    _lightError = map.containsKey('LightError') ? map['LightError'] : false;
+    _lightLearning = map.containsKey('LightLearning') ? map['LightLearning'] : false;
+    _bleUnbound = map.containsKey('BLEUnbond') ? map['BLEUnbond'] : false;
+    _flashSize = map.containsKey('FlashSize') ? map['FlashSize'] : 0;
+    _version = map.containsKey('Version') ? map['Version'] : 'unknow';
   }
 
   _downloadFromRemote() {
@@ -79,9 +100,9 @@ class _ControllerPageState extends State<ControllerPage> {
   @override
   void initState() {
     super.initState();
-    SharedPreferences.getInstance().then((pref){
+    SharedPreferences.getInstance().then((pref) {
       var json = pref.getString('setup.json');
-      if(json != null && json.isNotEmpty){
+      if (json != null && json.isNotEmpty) {
         _updateValue(jsonDecode(json));
       }
     });
@@ -102,33 +123,208 @@ class _ControllerPageState extends State<ControllerPage> {
         ],
       ),
       body: _settings != null
-          ? Column(
+          ? ListView(
               children: [
-                Expanded(
-                    child: ListView(
-                  padding: const EdgeInsets.only(left: 16, top: 16, right: 16),
-                  children: [
-                    buildSetVolumn(),
-                    buildBlinkInterval(),
-                    Divider(
-                      height: 24,
+
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      children: [
+                        buildSetVolumn(),
+                        buildBlinkInterval(),
+                      ],
                     ),
-                    buildEnableBootSound(),
-                    buildBootSound(),
-                    Divider(
-                      height: 24,
+                  ),
+                ),
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      children: [buildEnableBootSound(), buildBootSound(), buildPlaySound()],
                     ),
-                    buildEnalbeBlinkSound(),
-                    buildBlinkSound(),
-                  ],
-                )),
-                ElevatedButton(onPressed: () {}, child: Text('上傳設定'))
+                  ),
+                ),
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      children: [
+                        buildEnalbeBlinkSound(),
+                        buildBlinkSound(),
+                      ],
+                    ),
+                  ),
+                ),
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      children: [
+                        buildWifiSwitcher(),
+                        buildWifiSsid(),
+                        buildWifiPw(),
+                        buildBleName(),
+                      ],
+                    ),
+                  ),
+                ),
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        buildLightError(),
+                        buildLightLearning(),
+                        buildBleUnbound(),
+                        buildFlashSize(),
+                        buildVersion()
+                      ],
+                    ),
+                  ),
+                ),
+                buildFactorySetup(),
+                buildSetupSave(),
               ],
             )
           : const Padding(
               padding: EdgeInsets.all(16.0),
               child: Text('找不到設定檔'),
             ),
+    );
+  }
+  Widget buildVersion(){
+    return Padding(
+      padding: const EdgeInsets.only(top: 16.0, bottom: 16.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text('Version'),
+          Text(_version.toString().toUpperCase(), style: TextStyle(fontWeight: FontWeight.bold),)
+        ],
+      ),
+    );
+  }
+  Widget buildFlashSize(){
+    return Padding(
+      padding: const EdgeInsets.only(top: 16.0, bottom: 16.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text('Flash Size'),
+          Text('${_flashSize.toString().toUpperCase()} KB', style: TextStyle(fontWeight: FontWeight.bold),)
+        ],
+      ),
+    );
+  }
+  Widget buildBleUnbound(){
+    return Padding(
+      padding: const EdgeInsets.only(top: 16.0, bottom: 16.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text('BLE Unbound'),
+          Text(_bleUnbound.toString().toUpperCase(), style: TextStyle(fontWeight: FontWeight.bold),)
+        ],
+      ),
+    );
+  }
+  Widget buildLightLearning(){
+    return Padding(
+      padding: const EdgeInsets.only(top: 16.0, bottom: 16.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text('Light learning'),
+          Text(_lightLearning.toString().toUpperCase(), style: TextStyle(fontWeight: FontWeight.bold),)
+        ],
+      ),
+    );
+  }
+  Widget buildLightError() {
+    return Row(
+      children: [
+        Text('Light error'),
+        Spacer(),
+        Switch(
+            value: _lightError,
+            onChanged: (v) {
+              setState(() {
+                _lightError = v;
+              });
+            }),
+      ],
+    );
+  }
+
+  Widget buildSetupSave() {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: SizedBox(width: double.infinity, child: ElevatedButton(onPressed: () {}, child: Text('Setup Save'))),
+    );
+  }
+
+  Widget buildFactorySetup() {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: SizedBox(width: double.infinity, child: ElevatedButton(onPressed: () {}, child: Text('Factory Setup'))),
+    );
+  }
+
+  Widget buildWifiSwitcher() {
+    return Row(
+      children: [
+        Text('Wifi 開/關'),
+        Switch(
+            value: _wifiOn,
+            onChanged: (enable) {
+              setState(() {
+                _wifiOn = enable;
+              });
+            })
+      ],
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    );
+  }
+
+  Widget buildPlaySound() {
+    var items = FtpManager.instance
+        .getFiles()
+        .map(
+          (e) => DropdownMenuItem<String>(
+            child: Text(utf8Decode(e.name)),
+            value: e.name,
+          ),
+        )
+        .toList();
+    items.add(const DropdownMenuItem(
+      child: Text(
+        '無',
+      ),
+      value: '',
+    ));
+
+    return Row(
+      children: [
+        DropdownButton(
+            value: _playSound,
+            items: items,
+            onChanged: (path) {
+              setState(() {
+                _playSound = path.toString();
+              });
+            }),
+        Spacer(),
+        ElevatedButton(onPressed: () {}, child: Text('Play')),
+        SizedBox(
+          width: 8,
+        ),
+        ElevatedButton(
+          onPressed: () {},
+          child: Text('Stop'),
+        ),
+      ],
     );
   }
 
@@ -240,7 +436,7 @@ class _ControllerPageState extends State<ControllerPage> {
     );
   }
 
-  Row buildBlinkInterval() {
+  Widget buildBlinkInterval() {
     return Row(
       children: [
         Text('閃爍時間'),
@@ -266,7 +462,7 @@ class _ControllerPageState extends State<ControllerPage> {
     );
   }
 
-  Row buildSetVolumn() {
+  Widget buildSetVolumn() {
     return Row(
       children: [
         Text('調整音量'),
@@ -288,6 +484,46 @@ class _ControllerPageState extends State<ControllerPage> {
           max: 21,
         ),
       ],
+    );
+  }
+
+  Widget buildBleName() {
+    final controller = TextEditingController();
+    controller.text = _bleName;
+    return TextFormField(
+      controller: controller,
+      decoration: InputDecoration(labelText: 'BLE name'),
+      onEditingComplete: () {
+        _bleName = controller.text;
+      },
+    );
+  }
+
+  final wifiSsidController = TextEditingController();
+
+  Widget buildWifiSsid() {
+    wifiSsidController.text = _wifiSsid;
+    return TextFormField(
+      controller: wifiSsidController,
+      decoration: InputDecoration(
+        labelText: 'Wifi SSID',
+      ),
+      onEditingComplete: () {
+        _wifiSsid = wifiSsidController.text;
+      },
+    );
+  }
+
+  final wifiPwController = TextEditingController();
+
+  Widget buildWifiPw() {
+    wifiPwController.text = _wifiPw;
+    return TextFormField(
+      controller: wifiPwController,
+      decoration: InputDecoration(labelText: 'Wifi Password'),
+      onEditingComplete: () {
+        _wifiPw = wifiPwController.text;
+      },
     );
   }
 }
