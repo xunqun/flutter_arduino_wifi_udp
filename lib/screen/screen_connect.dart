@@ -44,7 +44,7 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Text(
-                    '連接到裝置',
+                    '連接到WIFI',
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                   TextField(

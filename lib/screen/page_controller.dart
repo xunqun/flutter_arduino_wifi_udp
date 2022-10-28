@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:flutter_wifi_udp/manager/ble_manager.dart';
 import 'package:flutter_wifi_udp/manager/ftp_manager.dart';
 import 'package:flutter_wifi_udp/utility/string_tool.dart';
 import 'package:path_provider/path_provider.dart';
@@ -13,16 +15,19 @@ import '../manager/udp_manager.dart';
 
 // sample setup file
 // {
-//  "Volume":	21,v
-//  "Boot_Sound_EN":	1,
-//  "Blink_Sound_Mode":	0,
-//  "Blink_Time":	600,
-//  "Light_Load":	550,
-//  "BLE_Name":	"Flasher BLE",
-//  "WiFi_SSID":	"KOSO flasher",
-//  "WiFi_Password":	"00000000",
-//  "Blink_Sound":	"",
-//  "Boot_Sound":	""
+// "Volume":	21,
+// "Boot_Sound_EN":	1,
+// "Blink_Sound_Mode":	0,
+// "Blink_Time":	600,
+// "Light_Error_EN":	1,
+// "Light_Load":	550,
+// "Light_Curr":	0,
+// "ADC_Cal_Val":	2621,
+// "BLE_Name":	"Flasher BLE",
+// "WiFi_SSID":	"KOSO flasher",
+// "WiFi_Password":	"00000000",
+// "Blink_Sound":	"",
+// "Boot_Sound":	""
 // }
 class ControllerPage extends StatefulWidget {
   const ControllerPage({Key? key}) : super(key: key);
@@ -39,9 +44,9 @@ class _ControllerPageState extends State<ControllerPage> {
   bool _enableBlinkSound = false;
   String _selectedBootSound = '';
   String _selectedBlinkSound = '';
-  String _bleName = 'asdf';
-  String _wifiSsid = 'asdf';
-  String _wifiPw = 'asdf';
+  String _bleName = '';
+  String _wifiSsid = '';
+  String _wifiPw = '';
   var _wifiOn = false;
   var _playSound = '';
   var _lightError = false;
@@ -60,16 +65,21 @@ class _ControllerPageState extends State<ControllerPage> {
     _selectedBootSound = map['Boot_Sound'];
     _selectedBlinkSound = map['Blink_Sound'];
 
-    _bleName = map.containsKey('BLEName') ? map['BLEName'] : '';
-    _wifiSsid = map.containsKey('WiFiSSID') ? map['WiFiSSID'] : '';
-    _wifiPw = map.containsKey('WiFiPwd') ? map['WiFiPwd'] : '';
+    _bleName = map.containsKey('BLE_Name') ? map['BLE_Name'] : '';
+    bleNameController.text = _bleName;
+    _wifiSsid = map.containsKey('WiFi_SSID') ? map['WiFi_SSID'] : '';
+    wifiSsidController.text = _wifiSsid;
+    _wifiPw = map.containsKey('WiFi_Password') ? map['WiFi_Password'] : '';
+    wifiPwController.text = _wifiPw;
     _wifiOn = map.containsKey('WiFiStatus') ? map['WiFiStatus'] : false;
     _playSound = map.containsKey('PlaySound') ? map['PlaySound'] : '';
-    _lightError = map.containsKey('LightError') ? map['LightError'] : false;
+    _lightError = map.containsKey('Light_Error_EN') ? map['Light_Error_EN'] == 1 : false;
     _lightLearning = map.containsKey('LightLearning') ? map['LightLearning'] : false;
     _bleUnbound = map.containsKey('BLEUnbond') ? map['BLEUnbond'] : false;
     _flashSize = map.containsKey('FlashSize') ? map['FlashSize'] : 0;
     _version = map.containsKey('Version') ? map['Version'] : 'unknow';
+
+
   }
 
   _downloadFromRemote() {
@@ -103,7 +113,7 @@ class _ControllerPageState extends State<ControllerPage> {
     SharedPreferences.getInstance().then((pref) {
       var json = pref.getString('setup.json');
       if (json != null && json.isNotEmpty) {
-        _updateValue(jsonDecode(json));
+         _updateValue(jsonDecode(json));
       }
     });
     _downloadFromRemote();
@@ -123,125 +133,170 @@ class _ControllerPageState extends State<ControllerPage> {
         ],
       ),
       body: _settings != null
-          ? ListView(
-              children: [
-
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      children: [
-                        buildSetVolumn(),
-                        buildBlinkInterval(),
-                      ],
-                    ),
-                  ),
-                ),
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      children: [buildEnableBootSound(), buildBootSound(), buildPlaySound()],
-                    ),
-                  ),
-                ),
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      children: [
-                        buildEnalbeBlinkSound(),
-                        buildBlinkSound(),
-                      ],
-                    ),
-                  ),
-                ),
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      children: [
-                        buildWifiSwitcher(),
-                        buildWifiSsid(),
-                        buildWifiPw(),
-                        buildBleName(),
-                      ],
-                    ),
-                  ),
-                ),
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        buildLightError(),
-                        buildLightLearning(),
-                        buildBleUnbound(),
-                        buildFlashSize(),
-                        buildVersion()
-                      ],
-                    ),
-                  ),
-                ),
-                buildFactorySetup(),
-                buildSetupSave(),
-              ],
-            )
+          ? buildListView()
           : const Padding(
               padding: EdgeInsets.all(16.0),
               child: Text('找不到設定檔'),
             ),
     );
   }
-  Widget buildVersion(){
+
+  ListView buildListView() {
+    return ListView(
+            children: [
+              Card(
+                child: StreamBuilder<BluetoothDeviceState>(
+                    stream: BleManager.instance.stateStream,
+                    initialData: BluetoothDeviceState.disconnected,
+                    builder: (context, snapshot) {
+                      BluetoothDeviceState state = BleManager.instance.state;
+                      return ListTile(
+                        title: const Text('藍芽狀態'),
+                        subtitle: Text(state == BluetoothDeviceState.connected ? '已連接' : '尚未連接，將無法上傳設定'),
+                        trailing: getStateIcon(state),
+                        onTap: () {
+                          switch(state){
+                            case BluetoothDeviceState.disconnected:
+                                BleManager.instance.scanToConnect(_bleName.isNotEmpty ? _bleName : 'Flasher BLE');
+                              break;
+                            case BluetoothDeviceState.connected:
+                                BleManager.instance.disconnect();
+                              break;
+                            default:
+
+                          }
+                        },
+                      );
+                    }),
+              ),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    children: [
+                      buildSetVolumn(),
+                      buildBlinkInterval(),
+                    ],
+                  ),
+                ),
+              ),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    children: [buildEnableBootSound(), buildBootSound(), buildPlaySound()],
+                  ),
+                ),
+              ),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    children: [
+                      buildEnalbeBlinkSound(),
+                      buildBlinkSound(),
+                    ],
+                  ),
+                ),
+              ),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    children: [
+                      buildWifiSwitcher(),
+                      buildWifiSsid(),
+                      buildWifiPw(),
+                      buildBleName(),
+                    ],
+                  ),
+                ),
+              ),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      buildLightError(),
+                      buildLightLearning(),
+                      buildBleUnbound(),
+                      buildFlashSize(),
+                      buildVersion()
+                    ],
+                  ),
+                ),
+              ),
+              buildFactorySetup(),
+              buildSetupSave(),
+            ],
+          );
+  }
+
+  Widget buildVersion() {
     return Padding(
       padding: const EdgeInsets.only(top: 16.0, bottom: 16.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text('Version'),
-          Text(_version.toString().toUpperCase(), style: TextStyle(fontWeight: FontWeight.bold),)
+          Text(
+            _version.toString().toUpperCase(),
+            style: TextStyle(fontWeight: FontWeight.bold),
+          )
         ],
       ),
     );
   }
-  Widget buildFlashSize(){
+
+  Widget buildFlashSize() {
     return Padding(
       padding: const EdgeInsets.only(top: 16.0, bottom: 16.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text('Flash Size'),
-          Text('${_flashSize.toString().toUpperCase()} KB', style: TextStyle(fontWeight: FontWeight.bold),)
+          Text(
+            '${_flashSize.toString().toUpperCase()} KB',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          )
         ],
       ),
     );
   }
-  Widget buildBleUnbound(){
+
+  Widget buildBleUnbound() {
     return Padding(
       padding: const EdgeInsets.only(top: 16.0, bottom: 16.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text('BLE Unbound'),
-          Text(_bleUnbound.toString().toUpperCase(), style: TextStyle(fontWeight: FontWeight.bold),)
+          Text(
+            _bleUnbound.toString().toUpperCase(),
+            style: TextStyle(fontWeight: FontWeight.bold),
+          )
         ],
       ),
     );
   }
-  Widget buildLightLearning(){
+
+  Widget buildLightLearning() {
     return Padding(
       padding: const EdgeInsets.only(top: 16.0, bottom: 16.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text('Light learning'),
-          Text(_lightLearning.toString().toUpperCase(), style: TextStyle(fontWeight: FontWeight.bold),)
+          Text(
+            _lightLearning.toString().toUpperCase(),
+            style: TextStyle(fontWeight: FontWeight.bold),
+          )
         ],
       ),
     );
   }
+
   Widget buildLightError() {
     return Row(
       children: [
@@ -486,15 +541,15 @@ class _ControllerPageState extends State<ControllerPage> {
       ],
     );
   }
-
+  final bleNameController = TextEditingController();
   Widget buildBleName() {
-    final controller = TextEditingController();
-    controller.text = _bleName;
+
+    bleNameController.text = _bleName;
     return TextFormField(
-      controller: controller,
+      controller: bleNameController,
       decoration: InputDecoration(labelText: 'BLE name'),
       onEditingComplete: () {
-        _bleName = controller.text;
+        _bleName = bleNameController.text;
       },
     );
   }
@@ -525,5 +580,24 @@ class _ControllerPageState extends State<ControllerPage> {
         _wifiPw = wifiPwController.text;
       },
     );
+  }
+
+  Widget getStateIcon(BluetoothDeviceState state) {
+    IconData iconDate = Icons.more_horiz;
+    if (state == BluetoothDeviceState.connected) {
+      iconDate = Icons.cloud_done;
+      return Icon(
+        iconDate,
+        color: Colors.green,
+      );
+    } else if (state == BluetoothDeviceState.disconnected) {
+      iconDate = Icons.cloud_off;
+      return Icon(
+        iconDate,
+        color: Colors.red,
+      );
+    } else {
+      return Icon(iconDate);
+    }
   }
 }
