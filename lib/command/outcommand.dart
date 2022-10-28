@@ -3,162 +3,309 @@ import 'dart:convert';
 import 'package:flutter_wifi_udp/manager/settings.dart';
 import 'package:flutter_wifi_udp/utility/byte_tool.dart';
 
-class StartCommand {
-  List<int> begin = settings.beginByte;
-  List<int> end = settings.endByte;
-  List<int> word = ByteTool.stringToListIntWithSize(utf8.encode(settings.startWord), 8);
-  List<int> type = ByteTool.stringToListIntWithSize(utf8.encode('wav'), 5);
-  int length = 15;
-  int count = 0;
+// class StartCommand {
+//   List<int> begin = settings.beginByte;
+//   List<int> end = settings.endByte;
+//   List<int> word = ByteTool.stringToListIntWithSize(utf8.encode(settings.startWord), 8);
+//   List<int> type = ByteTool.stringToListIntWithSize(utf8.encode('wav'), 5);
+//   int length = 15;
+//   int count = 0;
+//
+//
+//   StartCommand(this.count, String fileExt) {
+//     type = ByteTool.stringToListIntWithSize(utf8.encode(fileExt), 5);
+//   }
+//
+//   int get checkSum => ByteTool.checkSum(word + type + ByteTool.int32bytes(count, 2));
+//
+//   get bytes => begin + ByteTool.int32bytes(length, 1) + word + type + ByteTool.int32bytes(count, 2) + ByteTool.int32bytes(checkSum, 1) + end;
+// }
+//
+// class EndCommand {
+//   List<int> begin = settings.beginByte;
+//   List<int> end = settings.endByte;
+//   int length = 8;
+//   List<int> word = ByteTool.stringToListIntWithSize(utf8.encode(settings.endWord), 8);
+//
+//
+//   EndCommand();
+//
+//   int get checkSum => ByteTool.checkSum(word);
+//
+//   get bytes => begin + ByteTool.int32bytes(length, 1) + word + ByteTool.int32bytes(checkSum, 1) + end;
+// }
+//
+// class DataCommand {
+//   List<int> begin = settings.beginByte;
+//   List<int> end = settings.endByte;
+//   int length = settings.dataLength;
+//   List<int> raw;
+//   int counter = 0;
+//
+//   DataCommand(this.raw, this.counter) {
+//     length = raw.length + 2; // counter length = 2
+//   }
+//
+//   int get checkSum => ByteTool.checkSum(raw + ByteTool.int32bytes(counter, 2));
+//
+//   get bytes => begin + ByteTool.int32bytes(length, 1) + raw + ByteTool.int32bytes(counter, 2) + ByteTool.int32bytes(checkSum, 1) + end;
+// }
 
-
-  StartCommand(this.count, String fileExt) {
-    type = ByteTool.stringToListIntWithSize(utf8.encode(fileExt), 5);
-  }
-
-  int get checkSum => ByteTool.checkSum(word + type + ByteTool.int32bytes(count, 2));
-
-  get bytes => begin + ByteTool.int32bytes(length, 1) + word + type + ByteTool.int32bytes(count, 2) + ByteTool.int32bytes(checkSum, 1) + end;
-}
-
-class EndCommand {
-  List<int> begin = settings.beginByte;
-  List<int> end = settings.endByte;
-  int length = 8;
-  List<int> word = ByteTool.stringToListIntWithSize(utf8.encode(settings.endWord), 8);
-
-
-  EndCommand();
-
-  int get checkSum => ByteTool.checkSum(word);
-
-  get bytes => begin + ByteTool.int32bytes(length, 1) + word + ByteTool.int32bytes(checkSum, 1) + end;
-}
-
-class DataCommand {
-  List<int> begin = settings.beginByte;
-  List<int> end = settings.endByte;
-  int length = settings.dataLength;
-  List<int> raw;
-  int counter = 0;
-
-  DataCommand(this.raw, this.counter) {
-    length = raw.length + 2; // counter length = 2
-  }
-
-  int get checkSum => ByteTool.checkSum(raw + ByteTool.int32bytes(counter, 2));
-
-  get bytes => begin + ByteTool.int32bytes(length, 1) + raw + ByteTool.int32bytes(counter, 2) + ByteTool.int32bytes(checkSum, 1) + end;
+abstract class OutCommanad{
+  List<int> get bytes;
+  String get string;
 }
 
 /**
  * SetVolume=15;
- * 16進制 : 53 65 74 56 6f 6c 75 6d 65 3d 31 35 3b
  */
-class VolumeCommand{
+class SetVolumeCommand extends OutCommanad{
   int volume;
-  VolumeCommand(this.volume);
+  SetVolumeCommand(this.volume);
+  @override
   get bytes => utf8.encode(string);
-  get string => 'SetVolume=$volume;';
+  @override
+  get string => '\r\nVolume=$volume\r\n';
+}
+
+class AskVolumeCommand extends OutCommanad{
+  @override
+  get bytes => utf8.encode(string);
+  @override
+  get string => '\r\nVolume?\r\n';
 }
 
 /**
  * SetBlinkTime=700;
- * 16進制 : 53 65 74 42 6c 69 6e 6b 54 69 6d 65 3d 37 30 30 3b
  */
-class BlinkTimeCommand{
+class SetBlinkTimeCommand extends OutCommanad{
   int blink; //(單位 ms, 預設600)
-  BlinkTimeCommand(this.blink);
+  SetBlinkTimeCommand(this.blink);
+  @override
   get bytes => utf8.encode(string);
-  get string => 'SetBlinkTime=$blink;';
+  @override
+  get string => '\r\nBlinkTime=$blink\r\n';
+}
+
+class AskBlinkTime extends OutCommanad{
+  @override
+  get bytes => utf8.encode(string);
+  @override
+  get string => '\r\nBlinkTime?\r\n';
 }
 
 /**
  * SetBootSound=1;
- * 16進制 : 53 65 74 42 6f 6f 74 53 6f 75 6e 64 3d 31 3b
  */
-class BootSoundEnableCommand{
-  int boot; // (0:關閉開機音效; 1:開啟開機音效)
-  BootSoundEnableCommand(this.boot);
+class SetBootSoundCommand extends OutCommanad{
+  bool enable;
+  String path; // (0:關閉開機音效; 1:開啟開機音效)
+  SetBootSoundCommand(this.enable, this.path);
   get bytes => utf8.encode(string);
-  get string => 'SetBootSound=$boot;';
+  get string => '\r\nBootSound=${enable ? 1 : 0},\"/r/$path\"\r\n';
+}
+
+class AskBootSoundCommnad extends OutCommanad{
+  get bytes => utf8.encode(string);
+  get string => '\r\nBootSound?\r\n';
 }
 
 /**
  * SetBlinkSoundMode=1;
- * 16進制 : 53 65 74 42 6c 69 6e 6b 53 6f 75 6e 64 4d 6f 64 65 3d 31 3b
  */
-class BlinkSoundModeCommand{
-  int mode; // (0:原廠音效,無法調音量及時間; 1:使用者自訂)
-  BlinkSoundModeCommand(this.mode);
+class SetBlinkSoundCommand extends OutCommanad{
+  bool enable; // (0:原廠音效,無法調音量及時間; 1:使用者自訂)
+  String path;
+  SetBlinkSoundCommand(this.enable, this.path);
   get bytes => utf8.encode(string);
-  get string => 'SetBlinkSoundMode=$mode;';
+  get string => '\r\nBlinkSound=${enable ? 1 : 0},\"/r/$path\"\r\n';
+}
+
+class AskBlinkSoundCommand extends OutCommanad{
+  get bytes => utf8.encode(string);
+  get string => '\r\nBlinkSound?\r\n';
 }
 
 /**
- * SetLightLoad=550;
- * 16進制 : 53 65 74 4c 69 67 68 74 4c 6f 61 64 3d 35 35 30 3b
+ * BLE name
  */
-class LightLoadCommand{
-  int value; //(預設550)
-  LightLoadCommand(this.value);
+class SetBleNameCommand extends OutCommanad{
+  String name;
+  SetBleNameCommand(this.name);
   get bytes => utf8.encode(string);
-  get string => 'SetLightLoad=$value;';
+  get string => '\r\nBLEName=\"$name\"\r\n';
+}
+
+class AskBleNameCommand extends OutCommanad{
+  get bytes => utf8.encode(string);
+  get string => '\r\nBLEName?\r\n';
 }
 
 /**
- * SetWiFiSSID="Koso flasher";
- * 16進制 : 53 65 74 57 69 46 69 53 53 49 44 3d 22 4b 6f 73 6f 20 46 6c 61 73 68 65 72 22 3b
+ * Wifi SSID
  */
-class WifiSsidCommand{
-  String value; //(長度最多 32 Byte)
-  WifiSsidCommand(this.value);
+class SetWifiSsidCommand extends OutCommanad{
+  String name;
+  SetWifiSsidCommand(this.name);
   get bytes => utf8.encode(string);
-  get string => 'SetWiFiSSID=$value;';
+  get string => '\r\nWiFiSSID=\"$name\"\r\n';
 }
 
-
-/**
- * SetWiFiPwd="ABCD1234";
- * 16進制 : 53 65 74 57 69 46 69 50 77 64 3d 22 41 42 43 44 31 32 33 34 22 3b
- */
-class WifiPwdCommand{
-  String value; //(長度最多 30 Byte)
-  WifiPwdCommand(this.value);
+class AskWifiSsidCommand extends OutCommanad{
   get bytes => utf8.encode(string);
-  get string => 'SetWiFiPwd=$value;';
+  get string => ' \r\nWiFiSSID?\r\n';
 }
 
 /**
- * BlinkSound="/Test.mp3";
- * 16進制 : 42 6c 69 6e 6b 53 6f 75 6e 64 3d 22 2f 54 65 73 74 2e 6d 70 33 22 3b
+ * Wifi Password
  */
-class BlinkSoundCommand{
-  String value; //(長度最多 30 Byte)
-  BlinkSoundCommand(this.value);
+class SetWifiPwCommand extends OutCommanad{
+  String pw;
+  SetWifiPwCommand(this.pw);
   get bytes => utf8.encode(string);
-  get string => 'BlinkSound=$value;';
+  get string => '\r\nWiFiPwd=\"ABCD1234\"\r\n';
+}
+
+class AskWifiPwCommand extends OutCommanad{
+  get bytes => utf8.encode(string);
+  get string => '\r\nWiFiPwd?\r\n';
 }
 
 /**
- * BootSound="/Test.mp3";
- * 16進制 : 42 6f 6f 74 53 6f 75 6e 64 3d 22 2f 54 65 73 74 2e 6d 70 33 22 3b
+ * Wifi status
  */
-class BootSoundCommand{
-  String value; //(長度最多 30 Byte)
-  BootSoundCommand(this.value);
+class SetWifiStatusCommand extends OutCommanad{
+  bool enable;
+  SetWifiStatusCommand(this.enable);
   get bytes => utf8.encode(string);
-  get string => 'BlinkSound=$value;';
+  get string => '\r\nWiFiStatus=1\r\n';
 }
 
 /**
- * 全部回復原廠設定
- * FactorySetup;
- * 16進制 : 46 61 63 74 6f 72 79 53 65 74 75 70 3b
+ * Play sound
  */
-class FactoryRecoveryCommand{
-  FactoryRecoveryCommand();
+class SetPlaySoundCommand extends OutCommanad{
+  String path;
+  SetPlaySoundCommand(this.path);
   get bytes => utf8.encode(string);
-  get string => 'FactorySetup;';
+  get string => '\r\nPlaySound=\"/r/$path\"\r\n';
 }
 
+class SetStopSoundCommand extends OutCommanad{
+  get bytes => utf8.encode(string);
+  get string => '\r\nStopSound\r\n';
+}
+
+/**
+ * Factory reset
+ */
+
+class FactoryResetCommand extends OutCommanad{
+  get bytes => utf8.encode(string);
+  get string => '\r\nFactorySetup\r\n';
+}
+
+class SetupSaveCommand extends OutCommanad{
+  get bytes => utf8.encode(string);
+  get string => '\r\nSetupSave\r\n';
+}
+
+class SetLightErrorCommand extends OutCommanad{
+  bool enable;
+  SetLightErrorCommand(this.enable);
+  get bytes => utf8.encode(string);
+  get string => '\r\nLightError=${enable?1:0}\r\n';
+}
+
+class AskLightErrorCommand extends OutCommanad{
+  get bytes => utf8.encode(string);
+  get string => '\r\nLightError?\r\n';
+}
+
+class AskLightLearningCommand extends OutCommanad{
+  get bytes => utf8.encode(string);
+  get string => '\r\nLightLearning\r\n';
+}
+
+class AskBleUnboundCommand extends OutCommanad{
+  get bytes => utf8.encode(string);
+  get string => '\r\nBLEUnbond\r\n';
+}
+
+class AskFlashSizeCommand extends OutCommanad{
+  get bytes => utf8.encode(string);
+  get string => '\r\nFlashSize?\r\n';
+}
+
+class AskVersionCommand extends OutCommanad{
+  get bytes => utf8.encode(string);
+  get string => ' \r\nVersion?\r\n';
+}
+
+// /**
+//  * SetLightLoad=550;
+//  */
+// class LightLoadCommand{
+//   int value; //(預設550)
+//   LightLoadCommand(this.value);
+//   get bytes => utf8.encode(string);
+//   get string => 'SetLightLoad=$value;';
+// }
+//
+// /**
+//  * SetWiFiSSID="Koso flasher";
+//  * 16進制 : 53 65 74 57 69 46 69 53 53 49 44 3d 22 4b 6f 73 6f 20 46 6c 61 73 68 65 72 22 3b
+//  */
+// class WifiSsidCommand{
+//   String value; //(長度最多 32 Byte)
+//   WifiSsidCommand(this.value);
+//   get bytes => utf8.encode(string);
+//   get string => 'SetWiFiSSID=$value;';
+// }
+//
+//
+// /**
+//  * SetWiFiPwd="ABCD1234";
+//  * 16進制 : 53 65 74 57 69 46 69 50 77 64 3d 22 41 42 43 44 31 32 33 34 22 3b
+//  */
+// class WifiPwdCommand{
+//   String value; //(長度最多 30 Byte)
+//   WifiPwdCommand(this.value);
+//   get bytes => utf8.encode(string);
+//   get string => 'SetWiFiPwd=$value;';
+// }
+//
+// /**
+//  * BlinkSound="/Test.mp3";
+//  * 16進制 : 42 6c 69 6e 6b 53 6f 75 6e 64 3d 22 2f 54 65 73 74 2e 6d 70 33 22 3b
+//  */
+// class BlinkSoundCommand{
+//   String name; //(長度最多 30 Byte)
+//   bool enable;
+//   BlinkSoundCommand(this.enable, this.name);
+//   get bytes => utf8.encode(string);
+//   get string => '\r\nBlinkSound=${enable ? 1 : 0},\"/r/$name\"\r\n';
+// }
+//
+// /**
+//  * BootSound="/Test.mp3";
+//  * 16進制 : 42 6f 6f 74 53 6f 75 6e 64 3d 22 2f 54 65 73 74 2e 6d 70 33 22 3b
+//  */
+// class BootSoundCommand{
+//   String value; //(長度最多 30 Byte)
+//   BootSoundCommand(this.value);
+//   get bytes => utf8.encode(string);
+//   get string => 'BlinkSound=$value;';
+// }
+//
+// /**
+//  * 全部回復原廠設定
+//  * FactorySetup;
+//  * 16進制 : 46 61 63 74 6f 72 79 53 65 74 75 70 3b
+//  */
+// class FactoryRecoveryCommand{
+//   FactoryRecoveryCommand();
+//   get bytes => utf8.encode(string);
+//   get string => 'FactorySetup;';
+// }
+//

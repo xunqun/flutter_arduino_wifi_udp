@@ -5,9 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_wifi_udp/manager/ble_manager.dart';
 import 'package:flutter_wifi_udp/manager/ftp_manager.dart';
+import 'package:flutter_wifi_udp/manager/setup_options.dart';
 import 'package:flutter_wifi_udp/utility/string_tool.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../command/outcommand.dart';
 import '../manager/log_manager.dart';
@@ -55,15 +55,15 @@ class _ControllerPageState extends State<ControllerPage> {
   var _flashSize = 0;
   var _version = 'unknow';
 
-  Map<String, dynamic>? _settings;
+  Map<String, dynamic>? _options;
 
   _updateValue(Map<String, dynamic> map) async {
-    _volume = map['Volume'] ?? 20.0;
-    _blink = map['Blink_Time'] ?? 600.0;
+    _volume = map['Volume'] ?? 20;
+    _blink = map['Blink_Time'] ?? 600;
     _enableBootSound = map['Boot_Sound_EN'] == 1;
     _enableBlinkSound = map['Blink_Sound_Mode'] == 1;
-    _selectedBootSound = map['Boot_Sound'];
-    _selectedBlinkSound = map['Blink_Sound'];
+    _selectedBootSound = map.containsKey('Boot_Sound') ? map['Boot_Sound']: '';
+    _selectedBlinkSound = map.containsKey('Blink_Sound') ? map['Blink_Sound']: '';
 
     _bleName = map.containsKey('BLE_Name') ? map['BLE_Name'] : '';
     bleNameController.text = _bleName;
@@ -78,8 +78,6 @@ class _ControllerPageState extends State<ControllerPage> {
     _bleUnbound = map.containsKey('BLEUnbond') ? map['BLEUnbond'] : false;
     _flashSize = map.containsKey('FlashSize') ? map['FlashSize'] : 0;
     _version = map.containsKey('Version') ? map['Version'] : 'unknow';
-
-
   }
 
   _downloadFromRemote() {
@@ -88,35 +86,33 @@ class _ControllerPageState extends State<ControllerPage> {
       await FtpManager.instance.download('setup.json', _setupPath!);
       File _localSetupFile = File(_setupPath);
       bool _localSetupFileExist = _localSetupFile.existsSync();
-      setState(() {
         if (_localSetupFileExist) {
           _localSetupFile.readAsString().then((value) async {
-            setState(() {
-              _settings = jsonDecode(value);
-              if (_settings != null) {
-                _updateValue(_settings!);
-              }
+            setState((){
+              _options = jsonDecode(value);
             });
-            final prefs = await SharedPreferences.getInstance();
-            prefs.setString('setup.json', value);
+            if (_options != null) {
+              SetupOptions.instance.loadFromJson(value);
+            }
+
           });
         } else {
-          _settings = null;
+          _options = null;
         }
-      });
     });
   }
 
   @override
   void initState() {
     super.initState();
-    SharedPreferences.getInstance().then((pref) {
-      var json = pref.getString('setup.json');
-      if (json != null && json.isNotEmpty) {
-         _updateValue(jsonDecode(json));
-      }
-    });
+    _options = SetupOptions.instance.options;
+    _updateValue(_options ?? {});
     _downloadFromRemote();
+    SetupOptions.instance.dataStream.listen((event) {
+      setState((){
+        _options = event;
+      });
+    });
   }
 
   @override
@@ -132,8 +128,8 @@ class _ControllerPageState extends State<ControllerPage> {
               icon: const Icon(Icons.file_download))
         ],
       ),
-      body: _settings != null
-          ? buildListView()
+      body: _options != null
+          ? buildControllList()
           : const Padding(
               padding: EdgeInsets.all(16.0),
               child: Text('找不到設定檔'),
@@ -141,96 +137,89 @@ class _ControllerPageState extends State<ControllerPage> {
     );
   }
 
-  ListView buildListView() {
+  ListView buildControllList() {
     return ListView(
-            children: [
-              Card(
-                child: StreamBuilder<BluetoothDeviceState>(
-                    stream: BleManager.instance.stateStream,
-                    initialData: BluetoothDeviceState.disconnected,
-                    builder: (context, snapshot) {
-                      BluetoothDeviceState state = BleManager.instance.state;
-                      return ListTile(
-                        title: const Text('藍芽狀態'),
-                        subtitle: Text(state == BluetoothDeviceState.connected ? '已連接' : '尚未連接，將無法上傳設定'),
-                        trailing: getStateIcon(state),
-                        onTap: () {
-                          switch(state){
-                            case BluetoothDeviceState.disconnected:
-                                BleManager.instance.scanToConnect(_bleName.isNotEmpty ? _bleName : 'Flasher BLE');
-                              break;
-                            case BluetoothDeviceState.connected:
-                                BleManager.instance.disconnect();
-                              break;
-                            default:
-
-                          }
-                        },
-                      );
-                    }),
-              ),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: [
-                      buildSetVolumn(),
-                      buildBlinkInterval(),
-                    ],
-                  ),
-                ),
-              ),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: [buildEnableBootSound(), buildBootSound(), buildPlaySound()],
-                  ),
-                ),
-              ),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: [
-                      buildEnalbeBlinkSound(),
-                      buildBlinkSound(),
-                    ],
-                  ),
-                ),
-              ),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: [
-                      buildWifiSwitcher(),
-                      buildWifiSsid(),
-                      buildWifiPw(),
-                      buildBleName(),
-                    ],
-                  ),
-                ),
-              ),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      buildLightError(),
-                      buildLightLearning(),
-                      buildBleUnbound(),
-                      buildFlashSize(),
-                      buildVersion()
-                    ],
-                  ),
-                ),
-              ),
-              buildFactorySetup(),
-              buildSetupSave(),
-            ],
-          );
+      children: [
+        Card(
+          child: StreamBuilder<BluetoothDeviceState>(
+              stream: BleManager.instance.stateStream,
+              initialData: BluetoothDeviceState.disconnected,
+              builder: (context, snapshot) {
+                BluetoothDeviceState state = BleManager.instance.state;
+                return ListTile(
+                  title: const Text('藍芽狀態'),
+                  subtitle: Text(state == BluetoothDeviceState.connected ? '已連接' : '尚未連接，將無法上傳設定'),
+                  trailing: getStateIcon(state),
+                  onTap: () {
+                    switch (state) {
+                      case BluetoothDeviceState.disconnected:
+                        BleManager.instance.scanToConnect(_bleName.isNotEmpty ? _bleName : 'Flasher BLE');
+                        break;
+                      case BluetoothDeviceState.connected:
+                        BleManager.instance.disconnect();
+                        break;
+                      default:
+                    }
+                  },
+                );
+              }),
+        ),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                buildSetVolumn(),
+                buildBlinkInterval(),
+              ],
+            ),
+          ),
+        ),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [buildEnableBootSound(), buildBootSound(), buildPlaySound()],
+            ),
+          ),
+        ),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                buildEnalbeBlinkSound(),
+                buildBlinkSound(),
+              ],
+            ),
+          ),
+        ),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                buildWifiSwitcher(),
+                buildWifiSsid(),
+                buildWifiPw(),
+                buildBleName(),
+              ],
+            ),
+          ),
+        ),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [buildLightError(), buildLightLearning(), buildBleUnbound(), buildFlashSize(), buildVersion()],
+            ),
+          ),
+        ),
+        buildFactorySetup(),
+        buildSetupSave(),
+      ],
+    );
   }
 
   Widget buildVersion() {
@@ -368,6 +357,10 @@ class _ControllerPageState extends State<ControllerPage> {
             onChanged: (path) {
               setState(() {
                 _playSound = path.toString();
+                if(_playSound.isNotEmpty) {
+                  var cmd = SetPlaySoundCommand(utf8Decode(_playSound));
+                  sendCommand(cmd);
+                }
               });
             }),
         Spacer(),
@@ -411,6 +404,8 @@ class _ControllerPageState extends State<ControllerPage> {
               ? (path) {
                   setState(() {
                     _selectedBlinkSound = path.toString();
+                    var cmd = SetBlinkSoundCommand(_enableBlinkSound, _selectedBootSound);
+                    BleManager.instance.write(cmd.bytes);
                   });
                 }
               : null,
@@ -449,6 +444,8 @@ class _ControllerPageState extends State<ControllerPage> {
               ? (path) {
                   setState(() {
                     _selectedBootSound = path.toString();
+                    var cmd = SetBootSoundCommand(_enableBootSound, _selectedBootSound);
+                    sendCommand(cmd);
                   });
                 }
               : null,
@@ -469,6 +466,8 @@ class _ControllerPageState extends State<ControllerPage> {
             onChanged: (enable) {
               setState(() {
                 _enableBlinkSound = enable;
+                var cmd = SetBlinkSoundCommand(_enableBlinkSound, _selectedBlinkSound);
+                BleManager.instance.write(cmd.bytes);
               });
             })
       ],
@@ -485,6 +484,8 @@ class _ControllerPageState extends State<ControllerPage> {
             onChanged: (enable) {
               setState(() {
                 _enableBootSound = enable;
+                var cmd = SetBootSoundCommand(enable, _selectedBootSound);
+                sendCommand(cmd);
               });
             })
       ],
@@ -504,9 +505,8 @@ class _ControllerPageState extends State<ControllerPage> {
             });
           },
           onChangeEnd: (double value) {
-            var cmd = BlinkTimeCommand(_blink.toInt());
-            udpManager.write(cmd.bytes);
-            logManager.addSendRaw(cmd.bytes, msg: 'SET BLINK', desc: cmd.string);
+            var cmd = SetBlinkTimeCommand(_blink.toInt());
+            sendCommand(cmd);
           },
           value: _blink.toDouble(),
           min: 600,
@@ -530,9 +530,8 @@ class _ControllerPageState extends State<ControllerPage> {
             });
           },
           onChangeEnd: (double value) {
-            var cmd = VolumeCommand(_volume.toInt());
-            udpManager.write(cmd.bytes);
-            logManager.addSendRaw(cmd.bytes, msg: 'SET VOLUME', desc: cmd.string);
+            var cmd = SetVolumeCommand(_volume.toInt());
+            sendCommand(cmd);
           },
           value: _volume.toDouble(),
           min: 0,
@@ -541,15 +540,18 @@ class _ControllerPageState extends State<ControllerPage> {
       ],
     );
   }
-  final bleNameController = TextEditingController();
-  Widget buildBleName() {
 
+  final bleNameController = TextEditingController();
+
+  Widget buildBleName() {
     bleNameController.text = _bleName;
     return TextFormField(
       controller: bleNameController,
       decoration: InputDecoration(labelText: 'BLE name'),
       onEditingComplete: () {
         _bleName = bleNameController.text;
+        var cmd = SetBleNameCommand(_bleName);
+        BleManager.instance.write(cmd.bytes);
       },
     );
   }
@@ -565,6 +567,8 @@ class _ControllerPageState extends State<ControllerPage> {
       ),
       onEditingComplete: () {
         _wifiSsid = wifiSsidController.text;
+        var cmd = SetWifiSsidCommand(_wifiSsid);
+        BleManager.instance.write(cmd.bytes);
       },
     );
   }
@@ -578,6 +582,8 @@ class _ControllerPageState extends State<ControllerPage> {
       decoration: InputDecoration(labelText: 'Wifi Password'),
       onEditingComplete: () {
         _wifiPw = wifiPwController.text;
+        var cmd = SetWifiPwCommand(_wifiPw);
+        BleManager.instance.write(cmd.bytes);
       },
     );
   }
@@ -598,6 +604,13 @@ class _ControllerPageState extends State<ControllerPage> {
       );
     } else {
       return Icon(iconDate);
+    }
+  }
+
+  void sendCommand(OutCommanad cmd) {
+    if(BleManager.instance.state == BluetoothDeviceState.connected) {
+      BleManager.instance.write(cmd.bytes);
+      logManager.addSendRaw(cmd.bytes, msg: cmd.toString(), desc: cmd.string);
     }
   }
 }

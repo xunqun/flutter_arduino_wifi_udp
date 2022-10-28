@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:flutter_wifi_udp/command/incommand.dart';
 
 class BleManager {
   static BleManager? _instance;
@@ -113,7 +114,9 @@ class BleManager {
   }
 
   void _handleData(List<int> buffer) {
-    String d = utf8.decode(buffer);
-    print('receive: $d');
+    var cmd = InCommand.factory(buffer);
+    if(cmd != null){
+
+    }
   }
 }
