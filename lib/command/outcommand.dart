@@ -65,14 +65,14 @@ class SetVolumeCommand extends OutCommanad{
   @override
   get bytes => utf8.encode(string);
   @override
-  get string => '\r\nVolume=$volume\r\n';
+  get string => 'Volume=$volume\r\n';
 }
 
 class AskVolumeCommand extends OutCommanad{
   @override
   get bytes => utf8.encode(string);
   @override
-  get string => '\r\nVolume?\r\n';
+  get string => 'Volume?\r\n';
 }
 
 /**
@@ -84,14 +84,14 @@ class SetBlinkTimeCommand extends OutCommanad{
   @override
   get bytes => utf8.encode(string);
   @override
-  get string => '\r\nBlinkTime=$blink\r\n';
+  get string => 'BlinkTime=$blink\r\n';
 }
 
 class AskBlinkTime extends OutCommanad{
   @override
   get bytes => utf8.encode(string);
   @override
-  get string => '\r\nBlinkTime?\r\n';
+  get string => 'BlinkTime?\r\n';
 }
 
 /**
@@ -102,12 +102,12 @@ class SetBootSoundCommand extends OutCommanad{
   String path; // (0:關閉開機音效; 1:開啟開機音效)
   SetBootSoundCommand(this.enable, this.path);
   get bytes => utf8.encode(string);
-  get string => '\r\nBootSound=${enable ? 1 : 0},\"/r/$path\"\r\n';
+  get string => 'BootSound=${enable ? 1 : 0},\"/r/$path\"\r\n';
 }
 
 class AskBootSoundCommnad extends OutCommanad{
   get bytes => utf8.encode(string);
-  get string => '\r\nBootSound?\r\n';
+  get string => 'BootSound?\r\n';
 }
 
 /**
@@ -118,12 +118,12 @@ class SetBlinkSoundCommand extends OutCommanad{
   String path;
   SetBlinkSoundCommand(this.enable, this.path);
   get bytes => utf8.encode(string);
-  get string => '\r\nBlinkSound=${enable ? 1 : 0},\"/r/$path\"\r\n';
+  get string => 'BlinkSound=${enable ? 1 : 0},\"/r/$path\"\r\n';
 }
 
 class AskBlinkSoundCommand extends OutCommanad{
   get bytes => utf8.encode(string);
-  get string => '\r\nBlinkSound?\r\n';
+  get string => 'BlinkSound?\r\n';
 }
 
 /**
@@ -133,12 +133,12 @@ class SetBleNameCommand extends OutCommanad{
   String name;
   SetBleNameCommand(this.name);
   get bytes => utf8.encode(string);
-  get string => '\r\nBLEName=\"$name\"\r\n';
+  get string => 'BLEName=\"$name\"\r\n';
 }
 
 class AskBleNameCommand extends OutCommanad{
   get bytes => utf8.encode(string);
-  get string => '\r\nBLEName?\r\n';
+  get string => 'BLEName?\r\n';
 }
 
 /**
@@ -148,7 +148,7 @@ class SetWifiSsidCommand extends OutCommanad{
   String name;
   SetWifiSsidCommand(this.name);
   get bytes => utf8.encode(string);
-  get string => '\r\nWiFiSSID=\"$name\"\r\n';
+  get string => 'WiFiSSID=\"$name\"\r\n';
 }
 
 class AskWifiSsidCommand extends OutCommanad{
@@ -163,12 +163,12 @@ class SetWifiPwCommand extends OutCommanad{
   String pw;
   SetWifiPwCommand(this.pw);
   get bytes => utf8.encode(string);
-  get string => '\r\nWiFiPwd=\"ABCD1234\"\r\n';
+  get string => 'WiFiPwd=\"ABCD1234\"\r\n';
 }
 
 class AskWifiPwCommand extends OutCommanad{
   get bytes => utf8.encode(string);
-  get string => '\r\nWiFiPwd?\r\n';
+  get string => 'WiFiPwd?\r\n';
 }
 
 /**
@@ -178,7 +178,7 @@ class SetWifiStatusCommand extends OutCommanad{
   bool enable;
   SetWifiStatusCommand(this.enable);
   get bytes => utf8.encode(string);
-  get string => '\r\nWiFiStatus=1\r\n';
+  get string => 'WiFiStatus=1\r\n';
 }
 
 /**
@@ -188,12 +188,12 @@ class SetPlaySoundCommand extends OutCommanad{
   String path;
   SetPlaySoundCommand(this.path);
   get bytes => utf8.encode(string);
-  get string => '\r\nPlaySound=\"/r/$path\"\r\n';
+  get string => 'PlaySound=\"/r/$path\"\r\n';
 }
 
 class SetStopSoundCommand extends OutCommanad{
   get bytes => utf8.encode(string);
-  get string => '\r\nStopSound\r\n';
+  get string => 'StopSound\r\n';
 }
 
 /**
@@ -202,39 +202,39 @@ class SetStopSoundCommand extends OutCommanad{
 
 class FactoryResetCommand extends OutCommanad{
   get bytes => utf8.encode(string);
-  get string => '\r\nFactorySetup\r\n';
+  get string => 'FactorySetup\r\n';
 }
 
 class SetupSaveCommand extends OutCommanad{
   get bytes => utf8.encode(string);
-  get string => '\r\nSetupSave\r\n';
+  get string => 'SetupSave\r\n';
 }
 
 class SetLightErrorCommand extends OutCommanad{
   bool enable;
   SetLightErrorCommand(this.enable);
   get bytes => utf8.encode(string);
-  get string => '\r\nLightError=${enable?1:0}\r\n';
+  get string => 'LightError=${enable?1:0}\r\n';
 }
 
 class AskLightErrorCommand extends OutCommanad{
   get bytes => utf8.encode(string);
-  get string => '\r\nLightError?\r\n';
+  get string => 'LightError?\r\n';
 }
 
 class AskLightLearningCommand extends OutCommanad{
   get bytes => utf8.encode(string);
-  get string => '\r\nLightLearning\r\n';
+  get string => 'LightLearning\r\n';
 }
 
 class AskBleUnboundCommand extends OutCommanad{
   get bytes => utf8.encode(string);
-  get string => '\r\nBLEUnbond\r\n';
+  get string => 'BLEUnbond\r\n';
 }
 
 class AskFlashSizeCommand extends OutCommanad{
   get bytes => utf8.encode(string);
-  get string => '\r\nFlashSize?\r\n';
+  get string => 'FlashSize?\r\n';
 }
 
 class AskVersionCommand extends OutCommanad{
@@ -284,7 +284,7 @@ class AskVersionCommand extends OutCommanad{
 //   bool enable;
 //   BlinkSoundCommand(this.enable, this.name);
 //   get bytes => utf8.encode(string);
-//   get string => '\r\nBlinkSound=${enable ? 1 : 0},\"/r/$name\"\r\n';
+//   get string => 'BlinkSound=${enable ? 1 : 0},\"/r/$name\"\r\n';
 // }
 //
 // /**
