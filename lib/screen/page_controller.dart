@@ -10,6 +10,7 @@ import 'package:flutter_wifi_udp/manager/setup_options.dart';
 import 'package:flutter_wifi_udp/utility/string_tool.dart';
 import 'package:path_provider/path_provider.dart';
 
+import '../command/incommand.dart';
 import '../command/outcommand.dart';
 import '../manager/log_manager.dart';
 import '../manager/udp_manager.dart';
@@ -53,7 +54,7 @@ class _ControllerPageState extends State<ControllerPage> {
   var _lightError = false;
   var _lightLearning = false;
   var _bleUnbound = false;
-  var _flashSize = 0;
+  var _flashSize = '0/0';
   var _version = 'unknow';
 
   Map<String, dynamic>? _options;
@@ -77,7 +78,7 @@ class _ControllerPageState extends State<ControllerPage> {
     _lightError = map.containsKey('Light_Error_EN') ? map['Light_Error_EN'] == 1 : false;
     _lightLearning = map.containsKey('LightLearning') ? map['LightLearning'] : false;
     _bleUnbound = map.containsKey('BLEUnbond') ? map['BLEUnbond'] : false;
-    _flashSize = map.containsKey('FlashSize') ? map['FlashSize'] : 0;
+    _flashSize = map.containsKey('FlashSize') ? map['FlashSize'] : '0,0';
     _version = map.containsKey('Version') ? map['Version'] : 'unknow';
   }
 
@@ -103,7 +104,8 @@ class _ControllerPageState extends State<ControllerPage> {
     });
   }
 
-  StreamSubscription? subs = null;
+  StreamSubscription? setupSubs = null;
+  StreamSubscription? inCmdSubs = null;
 
   @override
   void initState() {
@@ -111,9 +113,49 @@ class _ControllerPageState extends State<ControllerPage> {
     _options = SetupOptions.instance.options;
     _updateValue(_options ?? {});
     // _downloadFromRemote();
-    subs = SetupOptions.instance.dataStream.listen((event) {
+    setupSubs = SetupOptions.instance.dataStream.listen((event) {
       setState(() {
         _options = event;
+      });
+    });
+
+    inCmdSubs = BleManager.instance.inCmdStream.listen((event) {
+      setState(() {
+        switch(event.runtimeType){
+          case ReceivedVolume:
+            _volume = (event as ReceivedVolume).volumn;
+            break;
+          case ReceivedBlinktime:
+            _blink = (event as ReceivedBlinktime).value;
+            break;
+          case ReceivedBootSound:
+            _selectedBootSound = (event as ReceivedBootSound).value;
+            break;
+          case ReceivedBleName:
+            _bleName = (event as ReceivedBleName).value;
+            break;
+          case ReceivedBlinkSound:
+            _selectedBlinkSound = (event as ReceivedBlinkSound).value;
+            break;
+          case ReceivedWiFiSSID:
+            _wifiSsid = (event as ReceivedWiFiSSID).value;
+            break;
+          case ReceivedWiFiPwd:
+            _wifiPw = (event as ReceivedWiFiPwd).value;
+            break;
+          case ReceivedWiFiStatus:
+            _wifiOn = (event as ReceivedWiFiStatus).value == 1;
+            break;
+          case ReceivedLightError:
+            _lightError = (event as ReceivedLightError).value == 1;
+            break;
+          case ReceivedVersion:
+            _version = (event as ReceivedVersion).value;
+            break;
+          case ReceivedFlashSize:
+
+            _flashSize = (event as ReceivedFlashSize).spare.toString() + ',' + (event as ReceivedFlashSize).total.toString();
+        }
       });
     });
   }
@@ -121,7 +163,8 @@ class _ControllerPageState extends State<ControllerPage> {
   @override
   void dispose() {
     super.dispose();
-    subs?.cancel();
+    setupSubs?.cancel();
+    inCmdSubs?.cancel();
   }
 
   @override
@@ -165,12 +208,12 @@ class _ControllerPageState extends State<ControllerPage> {
                   children: [
                     ElevatedButton(
                         onPressed: () {
-                          BleManager.instance.write(AskVolumeCommand().bytes);
+                          sendCommand(AskVolumeCommand());
                         },
                         child: Text('詢問音量')),
                     ElevatedButton(
                         onPressed: () {
-                          BleManager.instance.write(AskBlinkTime().bytes);
+                          sendCommand(AskBlinkTime());
                         },
                         child: Text('詢問閃爍時間')),
                   ],
@@ -276,7 +319,7 @@ class _ControllerPageState extends State<ControllerPage> {
         children: [
           Text('Flash Size'),
           Text(
-            '${_flashSize.toString().toUpperCase()} KB',
+            '${_flashSize.toUpperCase()} KB',
             style: TextStyle(fontWeight: FontWeight.bold),
           )
         ],

@@ -1,36 +1,54 @@
 import 'dart:convert';
 
 abstract class InCommand{
+  List<int>? bytes;
+
   static InCommand? factory(List<int> bytes){
     String raw = utf8.decode(bytes).trim();
     var array = raw.split('=');
+
+    InCommand? cmd;
     switch(array[0]){
       case ReceivedVolume.tag:
-        return ReceivedVolume(int.parse(array[1]));
+        cmd = ReceivedVolume(int.parse(array[1]));
+        break;
       case ReceivedBlinktime.tag:
-        return ReceivedBlinktime(int.parse(array[1]));
+        cmd = ReceivedBlinktime(int.parse(array[1]));
+        break;
       case ReceivedBootSound.tag:
-        return ReceivedBootSound(array[1]);
+        cmd = ReceivedBootSound(array[1]);
+        break;
       case ReceivedBlinkSound.tag:
-        return ReceivedBlinkSound(array[1]);
+        cmd = ReceivedBlinkSound(array[1]);
+        break;
       case ReceivedBleName.tag:
-        return ReceivedBleName(array[1]);
+        cmd = ReceivedBleName(array[1]);
+        break;
       case ReceivedWiFiSSID.tag:
-        return ReceivedWiFiSSID(array[1]);
+        cmd = ReceivedWiFiSSID(array[1]);
+        break;
       case ReceivedWiFiPwd.tag:
-        return ReceivedWiFiPwd(array[1]);
+        cmd = ReceivedWiFiPwd(array[1]);
+        break;
       case ReceivedWiFiStatus.tag:
-        return ReceivedWiFiStatus(int.parse(array[1]));
+        cmd = ReceivedWiFiStatus(int.parse(array[1]));
+        break;
       case ReceivedLightError.tag:
-        return ReceivedLightError(int.parse(array[1]));
+        cmd = ReceivedLightError(int.parse(array[1]));
+        break;
       case ReceivedFlashSize.tag:
-        return ReceivedFlashSize(array[1]);
+        cmd = ReceivedFlashSize(array[1]);
+        break;
       case ReceivedVersion.tag:
-        return ReceivedVersion(array[1]);
+        cmd = ReceivedVersion(array[1]);
+        break;
       default:
-        return null;
+        cmd = null;
     }
+    cmd?.bytes = bytes;
+    return cmd;
   }
+
 
 }
 

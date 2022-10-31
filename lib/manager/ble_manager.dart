@@ -3,9 +3,12 @@ import 'dart:convert';
 
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_wifi_udp/command/incommand.dart';
+import 'package:flutter_wifi_udp/manager/log_manager.dart';
 
 class BleManager {
   static BleManager? _instance;
+
+  StreamSubscription<List<int>>? _byteSubs;
 
   static BleManager get instance {
     if(_instance == null) _instance = BleManager();
@@ -16,15 +19,23 @@ class BleManager {
   final CHAR_UUID = '0000ABF1-0000-1000-8000-00805F9B34FB';
   final FlutterBluePlus _blue = FlutterBluePlus.instance;
 
+  // connect state
   final StreamController<BluetoothDeviceState> _stateController = StreamController<BluetoothDeviceState>.broadcast();
   StreamSink<BluetoothDeviceState> get _stateSink => _stateController.sink;
   Stream<BluetoothDeviceState> get stateStream => _stateController.stream;
+
+  // received cmd
+  final StreamController<InCommand> _inCmdController = StreamController<InCommand>.broadcast();
+  StreamSink<InCommand> get _inCmdSink => _inCmdController.sink;
+  Stream<InCommand> get inCmdStream => _inCmdController.stream;
 
   String? _name;
   BluetoothDevice? _device;
   BluetoothService? _service;
   BluetoothCharacteristic? _characteristic;
   BluetoothDeviceState state = BluetoothDeviceState.disconnected;
+
+
 
   BleManager() {
     _blue.scanResults.listen((results) async {
@@ -55,6 +66,7 @@ class BleManager {
   }
 
   destory() {
+    _byteSubs?.cancel();
     disconnect();
     _blue.stopScan();
     _instance = null;
@@ -72,9 +84,12 @@ class BleManager {
         return s.uuid.toString().toUpperCase() == SERVICE_UUID;
       });
       _characteristic = _service!.characteristics.firstWhere((c) => c.uuid.toString().toUpperCase() == CHAR_UUID);
-      _characteristic!.onValueChangedStream.listen(_handleBytes);
+      await Future.delayed(Duration(milliseconds: 500));
+      await _characteristic!.setNotifyValue(true);
+      _byteSubs = _characteristic!.onValueChangedStream.listen(_handleBytes);
     } catch (e) {
       // service not found
+      print(e.toString());
     }
   }
 
@@ -116,7 +131,8 @@ class BleManager {
   void _handleData(List<int> buffer) {
     var cmd = InCommand.factory(buffer);
     if(cmd != null){
-
+      logManager.addReceiveRaw(cmd.bytes ?? [], msg: cmd.toString());
+      _inCmdSink.add(cmd);
     }
   }
 }
