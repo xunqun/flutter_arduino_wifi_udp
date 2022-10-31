@@ -121,7 +121,7 @@ class _ControllerPageState extends State<ControllerPage> {
 
     inCmdSubs = BleManager.instance.inCmdStream.listen((event) {
       setState(() {
-        switch(event.runtimeType){
+        switch (event.runtimeType) {
           case ReceivedVolume:
             _volume = (event as ReceivedVolume).volumn;
             break;
@@ -153,8 +153,8 @@ class _ControllerPageState extends State<ControllerPage> {
             _version = (event as ReceivedVersion).value;
             break;
           case ReceivedFlashSize:
-
-            _flashSize = (event as ReceivedFlashSize).spare.toString() + ',' + (event as ReceivedFlashSize).total.toString();
+            _flashSize =
+                (event as ReceivedFlashSize).spare.toString() + ',' + (event as ReceivedFlashSize).total.toString();
         }
       });
     });
@@ -202,7 +202,6 @@ class _ControllerPageState extends State<ControllerPage> {
             child: Column(
               children: [
                 buildSetVolumn(),
-                buildBlinkInterval(),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
@@ -211,11 +210,6 @@ class _ControllerPageState extends State<ControllerPage> {
                           sendCommand(AskVolumeCommand());
                         },
                         child: Text('詢問音量')),
-                    ElevatedButton(
-                        onPressed: () {
-                          sendCommand(AskBlinkTime());
-                        },
-                        child: Text('詢問閃爍時間')),
                   ],
                 )
               ],
@@ -226,7 +220,16 @@ class _ControllerPageState extends State<ControllerPage> {
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
-              children: [buildEnableBootSound(), buildBootSound(), buildPlaySound()],
+              children: [
+                buildEnableBootSound(),
+                buildBootSound(),
+                buildPlaySound(),
+                ElevatedButton(
+                    onPressed: () {
+                      sendCommand(AskBootSoundCommnad());
+                    },
+                    child: Text("詢問開機音效"))
+              ],
             ),
           ),
         ),
@@ -235,8 +238,24 @@ class _ControllerPageState extends State<ControllerPage> {
             padding: const EdgeInsets.all(16.0),
             child: Column(
               children: [
+                buildBlinkInterval(),
                 buildEnalbeBlinkSound(),
                 buildBlinkSound(),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    ElevatedButton(
+                        onPressed: () {
+                          sendCommand(AskBlinkTime());
+                        },
+                        child: Text('詢問閃爍時間')),
+                    ElevatedButton(
+                        onPressed: () {
+                          sendCommand(AskBlinkSoundCommand());
+                        },
+                        child: Text("詢問閃爍音效")),
+                  ],
+                )
               ],
             ),
           ),
@@ -250,6 +269,26 @@ class _ControllerPageState extends State<ControllerPage> {
                 buildWifiSsid(),
                 buildWifiPw(),
                 buildBleName(),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    ElevatedButton(
+                        onPressed: () {
+                          sendCommand(AskWifiSsidCommand());
+                        },
+                        child: Text('詢問SSID')),
+                    ElevatedButton(
+                        onPressed: () {
+                          sendCommand(AskWifiPwCommand());
+                        },
+                        child: Text('詢問PW')),
+                    ElevatedButton(
+                        onPressed: () {
+                          sendCommand(AskBleNameCommand());
+                        },
+                        child: Text('詢問BLE')),
+                  ],
+                )
               ],
             ),
           ),
@@ -259,7 +298,43 @@ class _ControllerPageState extends State<ControllerPage> {
             padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [buildLightError(), buildLightLearning(), buildBleUnbound(), buildFlashSize(), buildVersion()],
+              children: [
+                buildLightError(),
+                buildLightLearning(),
+                buildBleUnbound(),
+                buildFlashSize(),
+                buildVersion(),
+                Wrap(
+                  alignment: WrapAlignment.spaceEvenly,
+                  children: [
+                    ElevatedButton(
+                        onPressed: () {
+                          sendCommand(AskLightErrorCommand());
+                        },
+                        child: Text('詢問LightError')),
+                    ElevatedButton(
+                        onPressed: () {
+                          sendCommand(AskFlashSizeCommand());
+                        },
+                        child: Text('詢問Size')),
+                    ElevatedButton(
+                        onPressed: () {
+                          sendCommand(AskVersionCommand());
+                        },
+                        child: Text('詢問Version')),
+                    ElevatedButton(
+                        onPressed: () {
+                          sendCommand(AskBleUnboundCommand());
+                        },
+                        child: Text('詢問BleUnbound')),
+                    ElevatedButton(
+                        onPressed: () {
+                          sendCommand(AskLightLearningCommand());
+                        },
+                        child: Text('詢問LightLearning')),
+                  ],
+                )
+              ],
             ),
           ),
         ),

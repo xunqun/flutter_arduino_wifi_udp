@@ -239,7 +239,7 @@ class AskFlashSizeCommand extends OutCommanad{
 
 class AskVersionCommand extends OutCommanad{
   get bytes => utf8.encode(string);
-  get string => ' \r\nVersion?\r\n';
+  get string => 'Version?\r\n';
 }
 
 // /**
