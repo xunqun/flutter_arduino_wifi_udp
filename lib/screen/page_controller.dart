@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -62,8 +63,8 @@ class _ControllerPageState extends State<ControllerPage> {
     _blink = map['Blink_Time'] ?? 600;
     _enableBootSound = map['Boot_Sound_EN'] == 1;
     _enableBlinkSound = map['Blink_Sound_Mode'] == 1;
-    _selectedBootSound = map.containsKey('Boot_Sound') ? map['Boot_Sound']: '';
-    _selectedBlinkSound = map.containsKey('Blink_Sound') ? map['Blink_Sound']: '';
+    _selectedBootSound = map.containsKey('Boot_Sound') ? map['Boot_Sound'] : '';
+    _selectedBlinkSound = map.containsKey('Blink_Sound') ? map['Blink_Sound'] : '';
 
     _bleName = map.containsKey('BLE_Name') ? map['BLE_Name'] : '';
     bleNameController.text = _bleName;
@@ -71,8 +72,8 @@ class _ControllerPageState extends State<ControllerPage> {
     wifiSsidController.text = _wifiSsid;
     _wifiPw = map.containsKey('WiFi_Password') ? map['WiFi_Password'] : '';
     wifiPwController.text = _wifiPw;
-    _wifiOn = map.containsKey('WiFiStatus') ? map['WiFiStatus'] : false;
-    _playSound = map.containsKey('PlaySound') ? map['PlaySound'] : '';
+    _wifiOn = map.containsKey('WiFi_Status') ? map['WiFi_Status'] : false;
+    _playSound = map.containsKey('Play_Sound') ? map['Play_Sound'] : '';
     _lightError = map.containsKey('Light_Error_EN') ? map['Light_Error_EN'] == 1 : false;
     _lightLearning = map.containsKey('LightLearning') ? map['LightLearning'] : false;
     _bleUnbound = map.containsKey('BLEUnbond') ? map['BLEUnbond'] : false;
@@ -86,33 +87,41 @@ class _ControllerPageState extends State<ControllerPage> {
       await FtpManager.instance.download('setup.json', _setupPath!);
       File _localSetupFile = File(_setupPath);
       bool _localSetupFileExist = _localSetupFile.existsSync();
-        if (_localSetupFileExist) {
-          _localSetupFile.readAsString().then((value) async {
-            setState((){
-              _options = jsonDecode(value);
+      if (_localSetupFileExist) {
+        _localSetupFile.readAsString().then((value) async {
+          _options = jsonDecode(value);
+          if (_options != null) {
+            setState(() {
+              _updateValue(_options!);
             });
-            if (_options != null) {
-              SetupOptions.instance.loadFromJson(value);
-            }
-
-          });
-        } else {
-          _options = null;
-        }
+            SetupOptions.instance.loadFromJson(value);
+          }
+        });
+      } else {
+        _options = null;
+      }
     });
   }
+
+  StreamSubscription? subs = null;
 
   @override
   void initState() {
     super.initState();
     _options = SetupOptions.instance.options;
     _updateValue(_options ?? {});
-    _downloadFromRemote();
-    SetupOptions.instance.dataStream.listen((event) {
-      setState((){
+    // _downloadFromRemote();
+    subs = SetupOptions.instance.dataStream.listen((event) {
+      setState(() {
         _options = event;
       });
     });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    subs?.cancel();
   }
 
   @override
@@ -122,6 +131,7 @@ class _ControllerPageState extends State<ControllerPage> {
         title: const Text('Controller'),
         actions: [
           IconButton(
+              tooltip: '由FTP下載',
               onPressed: () {
                 _downloadFromRemote();
               },
@@ -141,28 +151,7 @@ class _ControllerPageState extends State<ControllerPage> {
     return ListView(
       children: [
         Card(
-          child: StreamBuilder<BluetoothDeviceState>(
-              stream: BleManager.instance.stateStream,
-              initialData: BluetoothDeviceState.disconnected,
-              builder: (context, snapshot) {
-                BluetoothDeviceState state = BleManager.instance.state;
-                return ListTile(
-                  title: const Text('藍芽狀態'),
-                  subtitle: Text(state == BluetoothDeviceState.connected ? '已連接' : '尚未連接，將無法上傳設定'),
-                  trailing: getStateIcon(state),
-                  onTap: () {
-                    switch (state) {
-                      case BluetoothDeviceState.disconnected:
-                        BleManager.instance.scanToConnect(_bleName.isNotEmpty ? _bleName : 'Flasher BLE');
-                        break;
-                      case BluetoothDeviceState.connected:
-                        BleManager.instance.disconnect();
-                        break;
-                      default:
-                    }
-                  },
-                );
-              }),
+          child: buildBleStatus(),
         ),
         Card(
           child: Padding(
@@ -171,6 +160,21 @@ class _ControllerPageState extends State<ControllerPage> {
               children: [
                 buildSetVolumn(),
                 buildBlinkInterval(),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    ElevatedButton(
+                        onPressed: () {
+                          BleManager.instance.write(AskVolumeCommand().bytes);
+                        },
+                        child: Text('詢問音量')),
+                    ElevatedButton(
+                        onPressed: () {
+                          BleManager.instance.write(AskBlinkTime().bytes);
+                        },
+                        child: Text('詢問閃爍時間')),
+                  ],
+                )
               ],
             ),
           ),
@@ -220,6 +224,32 @@ class _ControllerPageState extends State<ControllerPage> {
         buildSetupSave(),
       ],
     );
+  }
+
+  StreamBuilder<BluetoothDeviceState> buildBleStatus() {
+    return StreamBuilder<BluetoothDeviceState>(
+        stream: BleManager.instance.stateStream,
+        initialData: BluetoothDeviceState.disconnected,
+        builder: (context, snapshot) {
+          BluetoothDeviceState state = BleManager.instance.state;
+          return ListTile(
+            tileColor: state == BluetoothDeviceState.connected ? Colors.greenAccent : Colors.grey,
+            title: const Text('藍芽狀態'),
+            subtitle: Text(state == BluetoothDeviceState.connected ? '已連接' : '尚未連接，將無法上傳設定，點擊以連接'),
+            trailing: getStateIcon(state),
+            onTap: () {
+              switch (state) {
+                case BluetoothDeviceState.disconnected:
+                  BleManager.instance.scanToConnect(_bleName.isNotEmpty ? _bleName : 'Flasher BLE');
+                  break;
+                case BluetoothDeviceState.connected:
+                  BleManager.instance.disconnect();
+                  break;
+                default:
+              }
+            },
+          );
+        });
   }
 
   Widget buildVersion() {
@@ -289,14 +319,17 @@ class _ControllerPageState extends State<ControllerPage> {
   Widget buildLightError() {
     return Row(
       children: [
-        Text('Light error'),
-        Spacer(),
+        const Text('Light error'),
+        const Spacer(),
         Switch(
             value: _lightError,
             onChanged: (v) {
               setState(() {
                 _lightError = v;
               });
+              SetupOptions.instance.putLightError(_lightError);
+              var cmd = SetLightErrorCommand(_lightError);
+              sendCommand(cmd);
             }),
       ],
     );
@@ -305,14 +338,28 @@ class _ControllerPageState extends State<ControllerPage> {
   Widget buildSetupSave() {
     return Padding(
       padding: const EdgeInsets.all(8.0),
-      child: SizedBox(width: double.infinity, child: ElevatedButton(onPressed: () {}, child: Text('Setup Save'))),
+      child: SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+              onPressed: () {
+                var cmd = SetupSaveCommand();
+                sendCommand(cmd);
+              },
+              child: Text('Setup Save'))),
     );
   }
 
   Widget buildFactorySetup() {
     return Padding(
       padding: const EdgeInsets.all(8.0),
-      child: SizedBox(width: double.infinity, child: ElevatedButton(onPressed: () {}, child: Text('Factory Setup'))),
+      child: SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+              onPressed: () {
+                var cmd = FactoryResetCommand();
+                sendCommand(cmd);
+              },
+              child: Text('Factory Setup'))),
     );
   }
 
@@ -326,6 +373,9 @@ class _ControllerPageState extends State<ControllerPage> {
               setState(() {
                 _wifiOn = enable;
               });
+              SetupOptions.instance.putWifiStatus(enable);
+              var cmd = SetWifiStatusCommand(enable);
+              sendCommand(cmd);
             })
       ],
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -338,14 +388,12 @@ class _ControllerPageState extends State<ControllerPage> {
         .map(
           (e) => DropdownMenuItem<String>(
             child: Text(utf8Decode(e.name)),
-            value: e.name,
+            value: utf8Decode(e.name),
           ),
         )
         .toList();
     items.add(const DropdownMenuItem(
-      child: Text(
-        '無',
-      ),
+      child: Text('無'),
       value: '',
     ));
 
@@ -357,19 +405,26 @@ class _ControllerPageState extends State<ControllerPage> {
             onChanged: (path) {
               setState(() {
                 _playSound = path.toString();
-                if(_playSound.isNotEmpty) {
-                  var cmd = SetPlaySoundCommand(utf8Decode(_playSound));
-                  sendCommand(cmd);
-                }
+                SetupOptions.instance.putPlaySound(_playSound);
               });
             }),
         Spacer(),
-        ElevatedButton(onPressed: () {}, child: Text('Play')),
+        ElevatedButton(
+            onPressed: () {
+              if (_playSound.isNotEmpty) {
+                var cmd = SetPlaySoundCommand(_playSound);
+                sendCommand(cmd);
+              }
+            },
+            child: Text('Play')),
         SizedBox(
           width: 8,
         ),
         ElevatedButton(
-          onPressed: () {},
+          onPressed: () {
+            var cmd = SetStopSoundCommand();
+            sendCommand(cmd);
+          },
           child: Text('Stop'),
         ),
       ],
@@ -382,7 +437,7 @@ class _ControllerPageState extends State<ControllerPage> {
         .map(
           (e) => DropdownMenuItem<String>(
             child: Text(utf8Decode(e.name)),
-            value: e.name,
+            value: utf8Decode(e.name),
           ),
         )
         .toList();
@@ -404,9 +459,10 @@ class _ControllerPageState extends State<ControllerPage> {
               ? (path) {
                   setState(() {
                     _selectedBlinkSound = path.toString();
-                    var cmd = SetBlinkSoundCommand(_enableBlinkSound, _selectedBootSound);
-                    BleManager.instance.write(cmd.bytes);
                   });
+                  SetupOptions.instance.putBlinkSound(_selectedBootSound);
+                  var cmd = SetBlinkSoundCommand(_enableBlinkSound, _selectedBlinkSound);
+                  sendCommand(cmd);
                 }
               : null,
           enableFeedback: true,
@@ -422,7 +478,7 @@ class _ControllerPageState extends State<ControllerPage> {
         .map(
           (e) => DropdownMenuItem<String>(
             child: Text(utf8Decode(e.name)),
-            value: e.name,
+            value: utf8Decode(e.name),
           ),
         )
         .toList();
@@ -444,9 +500,10 @@ class _ControllerPageState extends State<ControllerPage> {
               ? (path) {
                   setState(() {
                     _selectedBootSound = path.toString();
-                    var cmd = SetBootSoundCommand(_enableBootSound, _selectedBootSound);
-                    sendCommand(cmd);
                   });
+                  SetupOptions.instance.putBootSound(_selectedBootSound);
+                  var cmd = SetBootSoundCommand(_enableBootSound, _selectedBootSound);
+                  sendCommand(cmd);
                 }
               : null,
           enableFeedback: true,
@@ -466,9 +523,10 @@ class _ControllerPageState extends State<ControllerPage> {
             onChanged: (enable) {
               setState(() {
                 _enableBlinkSound = enable;
-                var cmd = SetBlinkSoundCommand(_enableBlinkSound, _selectedBlinkSound);
-                BleManager.instance.write(cmd.bytes);
               });
+              SetupOptions.instance.putEnableBlinkSound(enable);
+              var cmd = SetBlinkSoundCommand(_enableBlinkSound, _selectedBlinkSound);
+              sendCommand(cmd);
             })
       ],
     );
@@ -484,6 +542,7 @@ class _ControllerPageState extends State<ControllerPage> {
             onChanged: (enable) {
               setState(() {
                 _enableBootSound = enable;
+                SetupOptions.instance.putEnableBootSound(enable);
                 var cmd = SetBootSoundCommand(enable, _selectedBootSound);
                 sendCommand(cmd);
               });
@@ -506,6 +565,7 @@ class _ControllerPageState extends State<ControllerPage> {
           },
           onChangeEnd: (double value) {
             var cmd = SetBlinkTimeCommand(_blink.toInt());
+            SetupOptions.instance.putBlinkInterval(_blink.toInt());
             sendCommand(cmd);
           },
           value: _blink.toDouble(),
@@ -531,6 +591,7 @@ class _ControllerPageState extends State<ControllerPage> {
           },
           onChangeEnd: (double value) {
             var cmd = SetVolumeCommand(_volume.toInt());
+            SetupOptions.instance.putVolume(_volume.toInt());
             sendCommand(cmd);
           },
           value: _volume.toDouble(),
@@ -545,14 +606,30 @@ class _ControllerPageState extends State<ControllerPage> {
 
   Widget buildBleName() {
     bleNameController.text = _bleName;
-    return TextFormField(
-      controller: bleNameController,
-      decoration: InputDecoration(labelText: 'BLE name'),
-      onEditingComplete: () {
-        _bleName = bleNameController.text;
-        var cmd = SetBleNameCommand(_bleName);
-        BleManager.instance.write(cmd.bytes);
-      },
+    return Row(
+      children: [
+        SizedBox(
+          width: 200,
+          child: TextFormField(
+            controller: bleNameController,
+            decoration: InputDecoration(labelText: 'BLE name'),
+            onEditingComplete: () {
+              setState(() {
+                _bleName = bleNameController.text;
+              });
+              SetupOptions.instance.putBleName(_bleName);
+            },
+          ),
+        ),
+        IconButton(
+            onPressed: () {
+              if (_bleName.isNotEmpty) {
+                var cmd = SetBleNameCommand(_bleName);
+                sendCommand(cmd);
+              }
+            },
+            icon: const Icon(Icons.send))
+      ],
     );
   }
 
@@ -560,16 +637,32 @@ class _ControllerPageState extends State<ControllerPage> {
 
   Widget buildWifiSsid() {
     wifiSsidController.text = _wifiSsid;
-    return TextFormField(
-      controller: wifiSsidController,
-      decoration: InputDecoration(
-        labelText: 'Wifi SSID',
-      ),
-      onEditingComplete: () {
-        _wifiSsid = wifiSsidController.text;
-        var cmd = SetWifiSsidCommand(_wifiSsid);
-        BleManager.instance.write(cmd.bytes);
-      },
+    return Row(
+      children: [
+        SizedBox(
+          width: 200,
+          child: TextFormField(
+            controller: wifiSsidController,
+            decoration: InputDecoration(
+              labelText: 'Wifi SSID',
+            ),
+            onEditingComplete: () {
+              setState(() {
+                _wifiSsid = wifiSsidController.text;
+              });
+              SetupOptions.instance.putWifiSsid(_wifiSsid);
+            },
+          ),
+        ),
+        IconButton(
+            onPressed: () {
+              if (_wifiSsid.isNotEmpty) {
+                var cmd = SetWifiSsidCommand(_wifiSsid);
+                sendCommand(cmd);
+              }
+            },
+            icon: const Icon(Icons.send))
+      ],
     );
   }
 
@@ -577,14 +670,30 @@ class _ControllerPageState extends State<ControllerPage> {
 
   Widget buildWifiPw() {
     wifiPwController.text = _wifiPw;
-    return TextFormField(
-      controller: wifiPwController,
-      decoration: InputDecoration(labelText: 'Wifi Password'),
-      onEditingComplete: () {
-        _wifiPw = wifiPwController.text;
-        var cmd = SetWifiPwCommand(_wifiPw);
-        BleManager.instance.write(cmd.bytes);
-      },
+    return Row(
+      children: [
+        SizedBox(
+          width: 200,
+          child: TextFormField(
+            controller: wifiPwController,
+            decoration: InputDecoration(labelText: 'Wifi Password'),
+            onEditingComplete: () {
+              setState(() {
+                _wifiPw = wifiPwController.text;
+              });
+              SetupOptions.instance.putWifiPw(_wifiPw);
+            },
+          ),
+        ),
+        IconButton(
+            onPressed: () {
+              if (_wifiPw.isNotEmpty) {
+                var cmd = SetWifiPwCommand(_wifiPw);
+                sendCommand(cmd);
+              }
+            },
+            icon: const Icon(Icons.send))
+      ],
     );
   }
 
@@ -608,7 +717,7 @@ class _ControllerPageState extends State<ControllerPage> {
   }
 
   void sendCommand(OutCommanad cmd) {
-    if(BleManager.instance.state == BluetoothDeviceState.connected) {
+    if (BleManager.instance.state == BluetoothDeviceState.connected) {
       BleManager.instance.write(cmd.bytes);
       logManager.addSendRaw(cmd.bytes, msg: cmd.toString(), desc: cmd.string);
     }
