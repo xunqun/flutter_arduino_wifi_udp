@@ -739,15 +739,13 @@ class _ControllerPageState extends State<ControllerPage> {
             controller: bleNameController,
             decoration: InputDecoration(labelText: 'BLE name'),
             onEditingComplete: () {
-              setState(() {
-                _bleName = bleNameController.text;
-              });
-              SetupOptions.instance.putBleName(_bleName);
             },
           ),
         ),
         IconButton(
             onPressed: () {
+              _bleName = bleNameController.text;
+              SetupOptions.instance.putBleName(_bleName);
               if (_bleName.isNotEmpty) {
                 var cmd = SetBleNameCommand(_bleName);
                 sendCommand(cmd);
@@ -772,15 +770,13 @@ class _ControllerPageState extends State<ControllerPage> {
               labelText: 'Wifi SSID',
             ),
             onEditingComplete: () {
-              setState(() {
-                _wifiSsid = wifiSsidController.text;
-              });
-              SetupOptions.instance.putWifiSsid(_wifiSsid);
             },
           ),
         ),
         IconButton(
             onPressed: () {
+              _wifiSsid = wifiSsidController.text;
+              SetupOptions.instance.putWifiSsid(_wifiSsid);
               if (_wifiSsid.isNotEmpty) {
                 var cmd = SetWifiSsidCommand(_wifiSsid);
                 sendCommand(cmd);
@@ -803,15 +799,13 @@ class _ControllerPageState extends State<ControllerPage> {
             controller: wifiPwController,
             decoration: InputDecoration(labelText: 'Wifi Password'),
             onEditingComplete: () {
-              setState(() {
-                _wifiPw = wifiPwController.text;
-              });
-              SetupOptions.instance.putWifiPw(_wifiPw);
             },
           ),
         ),
         IconButton(
             onPressed: () {
+              _wifiPw = wifiPwController.text;
+              SetupOptions.instance.putWifiPw(_wifiPw);
               if (_wifiPw.isNotEmpty) {
                 var cmd = SetWifiPwCommand(_wifiPw);
                 sendCommand(cmd);
