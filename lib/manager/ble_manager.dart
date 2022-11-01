@@ -77,7 +77,7 @@ class BleManager {
 
   _handleConnect() async {
     _device!.state.listen(_handleState);
-    // await _device!.requestMtu(160);
+    await _device!.requestMtu(64);
     await Future.delayed(const Duration(milliseconds: 1500));
     try {
       List<BluetoothService> services = await _device!.discoverServices();

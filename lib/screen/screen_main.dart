@@ -13,7 +13,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   var _index = 0;
-  final _pages = const [FilePage(), ControllerPage(), TerminalPage(), SettingPage()];
+  final _pages = const [FilePage(), ControllerPage(), TerminalPage()];
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -25,7 +25,6 @@ class _HomeScreenState extends State<HomeScreen> {
           BottomNavigationBarItem(icon: Icon(Icons.file_copy), label: 'FTP File'),
           BottomNavigationBarItem(icon: Icon(Icons.tune), label: 'Controller'),
           BottomNavigationBarItem(icon: Icon(Icons.terminal), label: 'Log'),
-          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings')
         ],
         onTap: (i){
           setState(() {

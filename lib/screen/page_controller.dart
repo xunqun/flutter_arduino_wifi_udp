@@ -845,14 +845,14 @@ class _ControllerPageState extends State<ControllerPage> {
       var now = DateTime.now().millisecondsSinceEpoch;
       if (now - wrintingTimeStamp > 1000) writting = false; // avoid send too many at one time & stuck
       if (!writting) {
-        var sendSize = 20;
+        var sendSize = 64;
         if (cmd.bytes.length > sendSize) {
           var counter = 0;
           while (counter < cmd.bytes.length) {
             var subcmd = cmd.bytes.sublist(counter, min(counter + sendSize, cmd.bytes.length));
             await BleManager.instance.write(subcmd);
             // print('send bytes ${subcmd.length}');
-            // print('${subcmd.map((e) => e.toRadixString(16).padLeft(2, '0')).join()}');
+            print('${subcmd.map((e) => e.toRadixString(16).padLeft(2, '0')).join()}');
             await Future.delayed(const Duration(milliseconds: 150));
             counter += sendSize;
           }
