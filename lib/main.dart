@@ -50,7 +50,12 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<bool> checkPermission() async {
-    return true;
+    var success = true;
+    success = success && await Permission.bluetoothConnect.isGranted;
+    success = success && await Permission.bluetoothScan.isGranted;
+    success = success && await Permission.locationWhenInUse.isGranted;
+    // success = success && await Permission.bluetooth.isGranted;
+    return success;
   }
 
   Widget check() {
