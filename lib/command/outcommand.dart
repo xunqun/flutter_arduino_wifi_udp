@@ -102,7 +102,8 @@ class SetBootSoundCommand extends OutCommanad{
   String path; // (0:關閉開機音效; 1:開啟開機音效)
   SetBootSoundCommand(this.enable, this.path);
   get bytes => utf8.encode(string);
-  get string => 'BootSound=${enable ? 1 : 0},\"/r/$path\"\r\n';
+  // get string => 'BootSound=${enable ? 1 : 0},\"/r/$path\"\r\n';
+  get string => 'BootSound=${enable ? 1 : 0},$path\r\n';
 }
 
 class AskBootSoundCommnad extends OutCommanad{
@@ -118,7 +119,7 @@ class SetBlinkSoundCommand extends OutCommanad{
   String path;
   SetBlinkSoundCommand(this.enable, this.path);
   get bytes => utf8.encode(string);
-  get string => 'BlinkSound=${enable ? 1 : 0},\"/r/$path\"\r\n';
+  get string => 'BlinkSound=${enable ? 1 : 0},$path\r\n';
 }
 
 class AskBlinkSoundCommand extends OutCommanad{
@@ -133,7 +134,7 @@ class SetBleNameCommand extends OutCommanad{
   String name;
   SetBleNameCommand(this.name);
   get bytes => utf8.encode(string);
-  get string => 'BLEName=\"$name\"\r\n';
+  get string => 'BLEName=$name\r\n';
 }
 
 class AskBleNameCommand extends OutCommanad{
@@ -148,12 +149,12 @@ class SetWifiSsidCommand extends OutCommanad{
   String name;
   SetWifiSsidCommand(this.name);
   get bytes => utf8.encode(string);
-  get string => 'WiFiSSID=\"$name\"\r\n';
+  get string => 'WiFiSSID=$name\r\n';
 }
 
 class AskWifiSsidCommand extends OutCommanad{
   get bytes => utf8.encode(string);
-  get string => ' \r\nWiFiSSID?\r\n';
+  get string => 'WiFiSSID?\r\n';
 }
 
 /**
@@ -163,7 +164,7 @@ class SetWifiPwCommand extends OutCommanad{
   String pw;
   SetWifiPwCommand(this.pw);
   get bytes => utf8.encode(string);
-  get string => 'WiFiPwd=\"ABCD1234\"\r\n';
+  get string => 'WiFiPwd=$pw\r\n';
 }
 
 class AskWifiPwCommand extends OutCommanad{
@@ -188,7 +189,7 @@ class SetPlaySoundCommand extends OutCommanad{
   String path;
   SetPlaySoundCommand(this.path);
   get bytes => utf8.encode(string);
-  get string => 'PlaySound=\"/r/$path\"\r\n';
+  get string => 'PlaySound=$path\r\n';
 }
 
 class SetStopSoundCommand extends OutCommanad{

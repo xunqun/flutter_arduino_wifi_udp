@@ -62,7 +62,6 @@ class BleManager {
   disconnect(){
     _device?.disconnect();
     _device = null;
-    destory();
   }
 
   destory() {
@@ -73,11 +72,13 @@ class BleManager {
   }
 
   write(List<int> bytes) {
-    _characteristic?.write(bytes, withoutResponse: false);
+    _characteristic?.write(bytes, withoutResponse: true);
   }
 
   _handleConnect() async {
     _device!.state.listen(_handleState);
+    // await _device!.requestMtu(160);
+    await Future.delayed(const Duration(milliseconds: 1500));
     try {
       List<BluetoothService> services = await _device!.discoverServices();
       _service = services.firstWhere((s){
@@ -131,8 +132,10 @@ class BleManager {
   void _handleData(List<int> buffer) {
     var cmd = InCommand.factory(buffer);
     if(cmd != null){
-      logManager.addReceiveRaw(cmd.bytes ?? [], msg: cmd.toString());
+      logManager.addReceiveRaw(buffer, msg: cmd.toString());
       _inCmdSink.add(cmd);
+    }else{
+      logManager.addReceiveRaw(buffer, msg: "UNKNOW EVENT");
     }
   }
 }

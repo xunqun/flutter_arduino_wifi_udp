@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
@@ -73,11 +74,11 @@ class _ControllerPageState extends State<ControllerPage> {
     wifiSsidController.text = _wifiSsid;
     _wifiPw = map.containsKey('WiFi_Password') ? map['WiFi_Password'] : '';
     wifiPwController.text = _wifiPw;
-    _wifiOn = map.containsKey('WiFi_Status') ? map['WiFi_Status'] : false;
+    _wifiOn = map.containsKey('WiFi_Status') ? map['WiFi_Status'] == 1 : false;
     _playSound = map.containsKey('Play_Sound') ? map['Play_Sound'] : '';
     _lightError = map.containsKey('Light_Error_EN') ? map['Light_Error_EN'] == 1 : false;
-    _lightLearning = map.containsKey('LightLearning') ? map['LightLearning'] : false;
-    _bleUnbound = map.containsKey('BLEUnbond') ? map['BLEUnbond'] : false;
+    _lightLearning = map.containsKey('LightLearning') ? map['LightLearning'] == 1 : false;
+    _bleUnbound = map.containsKey('BLEUnbond') ? map['BLEUnbond'] == 1 : false;
     _flashSize = map.containsKey('FlashSize') ? map['FlashSize'] : '0,0';
     _version = map.containsKey('Version') ? map['Version'] : 'unknow';
   }
@@ -111,8 +112,11 @@ class _ControllerPageState extends State<ControllerPage> {
   void initState() {
     super.initState();
     _options = SetupOptions.instance.options;
-    _updateValue(_options ?? {});
-    // _downloadFromRemote();
+    if (_options == null) {
+      _downloadFromRemote();
+    } else {
+      _updateValue(_options ?? {});
+    }
     setupSubs = SetupOptions.instance.dataStream.listen((event) {
       setState(() {
         _options = event;
@@ -834,10 +838,30 @@ class _ControllerPageState extends State<ControllerPage> {
     }
   }
 
-  void sendCommand(OutCommanad cmd) {
+  var writting = false;
+  var wrintingTimeStamp = 0;
+  void sendCommand(OutCommanad cmd) async{
     if (BleManager.instance.state == BluetoothDeviceState.connected) {
-      BleManager.instance.write(cmd.bytes);
-      logManager.addSendRaw(cmd.bytes, msg: cmd.toString(), desc: cmd.string);
+      var now = DateTime.now().millisecondsSinceEpoch;
+      if (now - wrintingTimeStamp > 1000) writting = false; // avoid send too many at one time & stuck
+      if (!writting) {
+        var sendSize = 20;
+        if (cmd.bytes.length > sendSize) {
+          var counter = 0;
+          while (counter < cmd.bytes.length) {
+            var subcmd = cmd.bytes.sublist(counter, min(counter + sendSize, cmd.bytes.length));
+            await BleManager.instance.write(subcmd);
+            // print('send bytes ${subcmd.length}');
+            // print('${subcmd.map((e) => e.toRadixString(16).padLeft(2, '0')).join()}');
+            await Future.delayed(const Duration(milliseconds: 150));
+            counter += sendSize;
+          }
+        } else {
+          BleManager.instance.write(cmd.bytes);
+        }
+        writting = false;
+        logManager.addSendRaw(cmd.bytes, msg: cmd.toString(), desc: cmd.string);
+      }
     }
   }
 }
