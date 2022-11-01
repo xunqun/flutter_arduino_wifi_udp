@@ -65,8 +65,10 @@ class _ControllerPageState extends State<ControllerPage> {
     _blink = map['Blink_Time'] ?? 600;
     _enableBootSound = map['Boot_Sound_EN'] == 1;
     _enableBlinkSound = map['Blink_Sound_Mode'] == 1;
-    _selectedBootSound = map.containsKey('Boot_Sound') ? map['Boot_Sound'] : '';
+    _selectedBootSound = (map.containsKey('Boot_Sound') ? map['Boot_Sound'] : '');
+    _selectedBootSound = _selectedBootSound.replaceAll("/r/", "");
     _selectedBlinkSound = map.containsKey('Blink_Sound') ? map['Blink_Sound'] : '';
+    _selectedBlinkSound = _selectedBlinkSound.replaceAll("/r/", "");
 
     _bleName = map.containsKey('BLE_Name') ? map['BLE_Name'] : '';
     bleNameController.text = _bleName;
@@ -76,6 +78,7 @@ class _ControllerPageState extends State<ControllerPage> {
     wifiPwController.text = _wifiPw;
     _wifiOn = map.containsKey('WiFi_Status') ? map['WiFi_Status'] == 1 : false;
     _playSound = map.containsKey('Play_Sound') ? map['Play_Sound'] : '';
+    _playSound = _playSound.replaceAll("/r/", "");
     _lightError = map.containsKey('Light_Error_EN') ? map['Light_Error_EN'] == 1 : false;
     _lightLearning = map.containsKey('LightLearning') ? map['LightLearning'] == 1 : false;
     _bleUnbound = map.containsKey('BLEUnbond') ? map['BLEUnbond'] == 1 : false;
