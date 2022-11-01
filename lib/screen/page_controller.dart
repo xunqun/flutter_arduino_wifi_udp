@@ -53,9 +53,8 @@ class _ControllerPageState extends State<ControllerPage> {
   var _wifiOn = false;
   var _playSound = '';
   var _lightError = false;
-  var _lightLearning = false;
-  var _bleUnbound = false;
-  var _flashSize = '0/0';
+
+  var _flashSize = '0,0';
   var _version = 'unknow';
 
   Map<String, dynamic>? _options;
@@ -80,8 +79,8 @@ class _ControllerPageState extends State<ControllerPage> {
     _playSound = map.containsKey('Play_Sound') ? map['Play_Sound'] : '';
     _playSound = _playSound.replaceAll("/r/", "");
     _lightError = map.containsKey('Light_Error_EN') ? map['Light_Error_EN'] == 1 : false;
-    _lightLearning = map.containsKey('LightLearning') ? map['LightLearning'] == 1 : false;
-    _bleUnbound = map.containsKey('BLEUnbond') ? map['BLEUnbond'] == 1 : false;
+    // _lightLearning = map.containsKey('LightLearning') ? map['LightLearning'] == 1 : false;
+    // _bleUnbound = map.containsKey('BLEUnbond') ? map['BLEUnbond'] == 1 : false;
     _flashSize = map.containsKey('FlashSize') ? map['FlashSize'] : '0,0';
     _version = map.containsKey('Version') ? map['Version'] : 'unknow';
   }
@@ -94,6 +93,7 @@ class _ControllerPageState extends State<ControllerPage> {
       bool _localSetupFileExist = _localSetupFile.existsSync();
       if (_localSetupFileExist) {
         _localSetupFile.readAsString().then((value) async {
+          print(value);
           _options = jsonDecode(value);
           if (_options != null) {
             setState(() {
@@ -416,10 +416,7 @@ class _ControllerPageState extends State<ControllerPage> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text('BLE Unbound'),
-          Text(
-            _bleUnbound.toString().toUpperCase(),
-            style: TextStyle(fontWeight: FontWeight.bold),
-          )
+          IconButton(onPressed: (){}, icon: const Icon(Icons.send),),
         ],
       ),
     );
@@ -432,10 +429,9 @@ class _ControllerPageState extends State<ControllerPage> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text('Light learning'),
-          Text(
-            _lightLearning.toString().toUpperCase(),
-            style: TextStyle(fontWeight: FontWeight.bold),
-          )
+          IconButton(onPressed: (){
+            sendCommand(AskLightLearningCommand());
+          }, icon: const Icon(Icons.send))
         ],
       ),
     );
