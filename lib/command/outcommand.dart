@@ -134,7 +134,7 @@ class SetBleNameCommand extends OutCommanad{
   String name;
   SetBleNameCommand(this.name);
   get bytes => utf8.encode(string);
-  get string => 'BLEName=\'$name\'\r\n';
+  get string => 'BLEName=\"$name\"\r\n';
 }
 
 class AskBleNameCommand extends OutCommanad{

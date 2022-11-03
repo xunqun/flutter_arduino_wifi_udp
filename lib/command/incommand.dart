@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:flutter_wifi_udp/manager/setup_options.dart';
+
 abstract class InCommand{
   List<int>? bytes;
 
@@ -11,36 +13,53 @@ abstract class InCommand{
     switch(array[0]){
       case ReceivedVolume.tag:
         cmd = ReceivedVolume(int.parse(array[1]));
+        SetupOptions.instance.putValue(array[0], array[1]);
         break;
       case ReceivedBlinktime.tag:
         cmd = ReceivedBlinktime(int.parse(array[1]));
+        SetupOptions.instance.putValue(array[0], array[1]);
         break;
       case ReceivedBootSound.tag:
         cmd = ReceivedBootSound(array[1]);
+        SetupOptions.instance.putValue(array[0], array[1]);
         break;
       case ReceivedBlinkSound.tag:
         cmd = ReceivedBlinkSound(array[1]);
+        SetupOptions.instance.putValue(array[0], array[1]);
         break;
       case ReceivedBleName.tag:
         cmd = ReceivedBleName(array[1]);
+        SetupOptions.instance.putValue(array[0], array[1]);
         break;
       case ReceivedWiFiSSID.tag:
         cmd = ReceivedWiFiSSID(array[1]);
+        SetupOptions.instance.putValue(array[0], array[1]);
         break;
       case ReceivedWiFiPwd.tag:
         cmd = ReceivedWiFiPwd(array[1]);
+        SetupOptions.instance.putValue(array[0], array[1]);
         break;
       case ReceivedWiFiStatus.tag:
         cmd = ReceivedWiFiStatus(int.parse(array[1]));
+        SetupOptions.instance.putValue(array[0], array[1]);
         break;
       case ReceivedLightError.tag:
         cmd = ReceivedLightError(int.parse(array[1]));
+        SetupOptions.instance.putValue(array[0], array[1]);
         break;
       case ReceivedFlashSize.tag:
         cmd = ReceivedFlashSize(array[1]);
+        SetupOptions.instance.putValue(array[0], array[1]);
         break;
       case ReceivedVersion.tag:
         cmd = ReceivedVersion(array[1]);
+        SetupOptions.instance.putValue(array[0], array[1]);
+        break;
+      case ResultOk.tag:
+        cmd = ResultOk();
+        break;
+      case ResultError.tag:
+        cmd = ResultError();
         break;
       default:
         cmd = null;
@@ -50,6 +69,14 @@ abstract class InCommand{
   }
 
 
+}
+
+class ResultOk extends InCommand{
+  static const String tag = 'Ok';
+}
+
+class ResultError extends InCommand{
+  static const String tag = 'Error';
 }
 
 class ReceivedVolume extends InCommand{

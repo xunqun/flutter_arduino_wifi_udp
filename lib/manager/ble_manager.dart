@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_wifi_udp/command/incommand.dart';
 import 'package:flutter_wifi_udp/manager/log_manager.dart';
+import 'package:flutter_wifi_udp/utility/string_tool.dart';
 
 class BleManager {
   static BleManager? _instance;
@@ -77,7 +78,7 @@ class BleManager {
 
   _handleConnect() async {
     _device!.state.listen(_handleState);
-    await _device!.requestMtu(64);
+    // await _device!.requestMtu(64);
     await Future.delayed(const Duration(milliseconds: 1500));
     try {
       List<BluetoothService> services = await _device!.discoverServices();
@@ -85,9 +86,10 @@ class BleManager {
         return s.uuid.toString().toUpperCase() == SERVICE_UUID;
       });
       _characteristic = _service!.characteristics.firstWhere((c) => c.uuid.toString().toUpperCase() == CHAR_UUID);
+      _byteSubs = _characteristic!.onValueChangedStream.listen(_handleBytes);
       await Future.delayed(Duration(milliseconds: 500));
       await _characteristic!.setNotifyValue(true);
-      _byteSubs = _characteristic!.onValueChangedStream.listen(_handleBytes);
+
     } catch (e) {
       // service not found
       print(e.toString());
@@ -115,13 +117,12 @@ class BleManager {
           startFound = true;
         } else{
           // this is end bytes
+          _buffer.add(0x0d);
+          _buffer.add(0x0a);
           print(_buffer.toList().map((e) => '0x${e.toRadixString(16)}').toList().toString());
-          if (_buffer.length != 46) {
-            _buffer.clear();
-            return;
-          }
           _handleData(_buffer);
           _buffer.clear();
+          break;
         }
       } else {
         _buffer.add(raw[i]);
@@ -132,7 +133,7 @@ class BleManager {
   void _handleData(List<int> buffer) {
     var cmd = InCommand.factory(buffer);
     if(cmd != null){
-      logManager.addReceiveRaw(buffer, msg: cmd.toString());
+      logManager.addReceiveRaw(buffer, msg: cmd.toString(), desc: utf8.decode(buffer));
       _inCmdSink.add(cmd);
     }else{
       logManager.addReceiveRaw(buffer, msg: "UNKNOW EVENT");

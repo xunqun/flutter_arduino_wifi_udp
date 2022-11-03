@@ -7,9 +7,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_wifi_udp/constant/state.dart';
 import 'package:flutter_wifi_udp/manager/ftp_manager.dart';
+import 'package:flutter_wifi_udp/manager/setup_options.dart';
 import 'package:flutter_wifi_udp/manager/udp_manager.dart';
 import 'package:flutter_wifi_udp/screen/screen_main.dart';
-import 'package:provider/src/provider.dart';
 import 'package:wifi_iot/wifi_iot.dart';
 
 class ConnectionScreen extends StatefulWidget {
@@ -20,6 +20,7 @@ class ConnectionScreen extends StatefulWidget {
 }
 
 class _ConnectionScreenState extends State<ConnectionScreen> {
+  
   final TextEditingController ssidController = TextEditingController(text: 'KOSO flasher');
   final TextEditingController pwController = TextEditingController(text: '00000000');
   String statusDescription = "未連線";
@@ -27,7 +28,12 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    var udpManager = context.watch<UdpManager>();
+    if(SetupOptions.instance.options?.containsKey('WiFi_SSID') == true){
+      ssidController.text = SetupOptions.instance.options!['WiFi_SSID'];
+    }
+    if(SetupOptions.instance.options?.containsKey('WiFi_Password') == true){
+      pwController.text = SetupOptions.instance.options!['WiFi_Password'];
+    }
     return StreamBuilder<ConnectState>(
         stream: state.connectStateStream,
         initialData: ConnectState.idle,
