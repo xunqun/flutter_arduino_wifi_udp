@@ -45,7 +45,7 @@ class SetupOptions {
     _persist();
   }
 
-  dynamic getValue(String name) => options![name];
+  dynamic getValue(String name) => options?[name];
 
   void putVolume(int volumn) => putValue('Volume', volumn);
 

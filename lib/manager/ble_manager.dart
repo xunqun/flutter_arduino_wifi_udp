@@ -57,7 +57,7 @@ class BleManager {
 
   scanToConnect(String name) {
     _name = name;
-    _blue.startScan(timeout: const Duration(seconds: 6));
+    _blue.startScan(timeout: const Duration(seconds: 6), allowDuplicates: false);
   }
 
   disconnect(){
