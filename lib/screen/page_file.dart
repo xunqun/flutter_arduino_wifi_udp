@@ -2,13 +2,18 @@ import 'dart:convert';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_wifi_udp/manager/ftp_manager.dart';
+import 'package:flutter_wifi_udp/manager/setup_options.dart';
 import 'package:flutter_wifi_udp/utility/string_tool.dart';
 import 'package:intl/intl.dart';
 import 'package:ftpconnect/src/dto/ftp_entry.dart';
+import 'package:wifi_iot/wifi_iot.dart';
 
+import '../constant/state.dart';
+import '../manager/udp_manager.dart';
 import '../stream/ftp_observer.dart';
 
 var busy = false;
+int state = 0; // 0: idle, 1: busy ,2: ftp connected
 
 class FilePage extends StatefulWidget {
   const FilePage({Key? key}) : super(key: key);
@@ -45,11 +50,7 @@ class _FilePageState extends State<FilePage> {
             title: const Text('上傳檔案'),
             subtitle: const Text('找裝置中的檔案'),
             trailing: busy ? const CircularProgressIndicator() : const Icon(Icons.search),
-            onTap: busy
-                ? null
-                : () {
-                    pickFile();
-                  },
+            onTap: state == 2 ? () { pickFile(); } : null,
           ),
         ],
       ),
@@ -57,7 +58,6 @@ class _FilePageState extends State<FilePage> {
   }
 
   void upload(BuildContext context, String path, String ext) async {
-
     await FtpManager.instance.upload(path);
     setState(() {
       busy = false;
@@ -91,7 +91,6 @@ class FtpBrowser extends StatefulWidget {
 }
 
 class _FtpBrowserState extends State<FtpBrowser> {
-
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<List<FTPEntry>>(
@@ -100,9 +99,32 @@ class _FtpBrowserState extends State<FtpBrowser> {
         builder: (context, snapshot) {
           var files = snapshot.data ?? [];
           return files.isEmpty
-              ? const Padding(
+              ? Padding(
                   padding: EdgeInsets.all(16.0),
-                  child: Text('沒有檔案'),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ElevatedButton(
+                        onPressed: () {
+                          var ssid = SetupOptions.instance.getValue('WiFi_SSID');
+                          var pw = SetupOptions.instance.getValue('WiFi_Password');
+                          if (ssid != null && pw != null) {
+                            connect(ssid, pw);
+                          }
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Text('連接檔案目錄'),
+                        ),
+                        style: ButtonStyle(
+                            foregroundColor: MaterialStateProperty.all(Colors.white),
+                            backgroundColor: MaterialStateProperty.all(Colors.red),
+                            shape: MaterialStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(36.0),
+                                side: const BorderSide(color: Colors.white)))),
+                      ),
+                    ],
+                  ),
                 )
               : ListView.builder(
                   itemCount: files.length,
@@ -113,7 +135,10 @@ class _FtpBrowserState extends State<FtpBrowser> {
                       title: Text(utf8Decode(files[index].name)),
                       subtitle: Text(time),
                       trailing: IconButton(
-                        icon: const Icon(Icons.close, size: 18,),
+                        icon: const Icon(
+                          Icons.close,
+                          size: 18,
+                        ),
                         onPressed: () async {
                           await FtpManager.instance.deleteFile(utf8Decode(files[index].name));
                           FtpManager.instance.refreshFiles();
@@ -122,5 +147,57 @@ class _FtpBrowserState extends State<FtpBrowser> {
                     );
                   });
         });
+  }
+
+  @override
+  void dispose() {
+    FtpManager.instance.disconnect();
+    WiFiForIoTPlugin.disconnect();
+    super.dispose();
+  }
+
+  void connect(String ssid, String pw) async {
+    setState(() {
+      state = 1;
+    });
+    var success = await WiFiForIoTPlugin.connect(ssid, password: pw, joinOnce: true, security: NetworkSecurity.WPA)
+        .timeout(Duration(seconds: 10), onTimeout: () => false);
+    udpManager.isConnected = success;
+    if (udpManager.isConnected) {
+      WiFiForIoTPlugin.forceWifiUsage(true);
+      await Future.delayed(const Duration(seconds: 1));
+      await bindFtp();
+    } else {
+      setState(() {
+        state = 0;
+      });
+    }
+  }
+
+  void disconnect() {
+    FtpManager.instance.disconnect();
+    WiFiForIoTPlugin.disconnect();
+    if (mounted) {
+      setState(() {
+        state = 0;
+      });
+    }
+  }
+
+  Future bindFtp() async {
+    appState.setState(ConnectState.ftpconnecting);
+    var success =
+        await FtpManager.instance.connect().timeout(const Duration(seconds: 6), onTimeout: () => false) ?? false;
+    appState.setState(success ? ConnectState.ftpconnected : ConnectState.idle);
+    setState(() {
+      state = success ? 2 : 0;
+    });
+    if (success) {
+      try {
+        await FtpManager.instance.refreshFiles();
+      } catch (e) {
+        print(e.toString());
+      }
+    }
   }
 }

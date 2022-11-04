@@ -212,12 +212,6 @@ class _ControllerPageState extends State<ControllerPage> {
         Card(
           child: Padding(
             padding: const EdgeInsets.all(16.0),
-            child: buildBlinkInterval(),
-          ),
-        ),
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
             child: buildEnableBootSound(),
           ),
         ),
@@ -226,8 +220,8 @@ class _ControllerPageState extends State<ControllerPage> {
             padding: const EdgeInsets.all(16.0),
             child: Column(
               children: [
-
                 buildEnableBlinkSound(),
+                buildBlinkInterval(),
               ],
             ),
           ),
@@ -335,7 +329,7 @@ class _ControllerPageState extends State<ControllerPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text('Flash Size'),
+          const Text('記憶體容量'),
           Text(
             '${_flashSize.toUpperCase()} KB',
             style: TextStyle(fontWeight: FontWeight.bold),
@@ -597,16 +591,16 @@ class _ControllerPageState extends State<ControllerPage> {
         Spacer(),
         Text('${_blink.toInt()}'),
         Slider(
-          onChanged: (double value) {
+          onChanged: _enableBlinkSound ? (double value) {
             setState(() {
               _blink = value.toInt();
             });
-          },
-          onChangeEnd: (double value) {
+          }: null,
+          onChangeEnd: _enableBlinkSound ? (double value) {
             var cmd = SetBlinkTimeCommand(_blink.toInt());
             SetupOptions.instance.putBlinkInterval(_blink.toInt());
             BleManager.instance.sendCommand(cmd);
-          },
+          }: null,
           value: _blink.toDouble(),
           min: 600,
           max: 850,

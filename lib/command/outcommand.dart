@@ -114,7 +114,7 @@ class SetBootSoundCommand extends OutCommanad {
 
   get string {
     if (path == null || path!.isEmpty) {
-      return 'BootSound=${enable ? 1 : 0}';
+      return 'BootSound=${enable ? 1 : 0}\r\n';
     } else {
       return enable ? 'BootSound=${enable ? 1 : 0},\"/r/$path\"\r\n' : 'BootSound=0';
     }
@@ -141,7 +141,7 @@ class SetBlinkSoundCommand extends OutCommanad {
   // get string => enable ? 'BlinkSound=${enable ? 1 : 0},\"/r/$path\"\r\n': 'BlinkSound=0';
   get string {
     if (path == null || path!.isEmpty) {
-      return 'BlinkSound=${enable ? 1 : 0}';
+      return 'BlinkSound=${enable ? 1 : 0}\r\n';
     } else {
       return enable ? 'BlinkSound=${enable ? 1 : 0},\"/r/$path\"\r\n' : 'BlinkSound=0';
     }
@@ -221,7 +221,7 @@ class SetWifiStatusCommand extends OutCommanad {
 
   get bytes => utf8.encode(string);
 
-  get string => 'WiFiStatus=1\r\n';
+  get string => 'WiFiStatus=${enable ? 1 : 0}\r\n';
 }
 
 /**
