@@ -1,9 +1,9 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_wifi_udp/command/outcommand.dart';
+import 'package:flutter_wifi_udp/constant/state.dart';
 import 'package:flutter_wifi_udp/manager/ble_manager.dart';
 import 'package:flutter_wifi_udp/manager/setup_options.dart';
 import 'package:flutter_wifi_udp/screen/screen_main.dart';
@@ -19,36 +19,34 @@ class _BleConnectScreenState extends State<BleConnectScreen> {
   var stateDesc = '點擊連線以連接閃爍器';
   var state = 0; //0: idle, 1: busy, 2: finish
   StreamSubscription? stateSub;
+
   @override
   void initState() {
     super.initState();
-    stateSub = BleManager.instance.stateStream.listen((event) {
-      switch(event){
-        case BluetoothDeviceState.connected:
-          setState((){
+    BleManager.instance;
+    stateSub = appState.connectStateStream.listen((event) {
+      switch (event) {
+        case ConnectState.bleconnected:
+          setState(() {
             stateDesc = '連接到藍芽';
-            state = 1;
+            state = 2;
           });
           askRequiredParameters();
-
           break;
-        case BluetoothDeviceState.connecting:
+        case ConnectState.bleconnecting:
           setState(() {
             stateDesc = '正在連接中';
             state = 1;
           });
           break;
-        case BluetoothDeviceState.disconnecting:
+        case ConnectState.idle:
           setState(() {
-            stateDesc = '正在中斷';
-            state = 1;
+            stateDesc = '點擊連線以連接閃爍器';
+            state = 0;
           });
           break;
         default:
-          setState(() {
-            stateDesc = '點擊連線以連接閃爍器';
-            state = 1;
-          });
+
       }
     });
   }
@@ -64,28 +62,55 @@ class _BleConnectScreenState extends State<BleConnectScreen> {
           SizedBox(
             width: 200,
             height: 64,
-            child: ElevatedButton(onPressed: state == 0 ? (){
-              setState(() {
-                stateDesc = "開始搜尋";
-              });
-              BleManager.instance.scanToConnect(_bleName ?? 'Flasher BLE');
-            }: null, child: Text('連線'), style: ButtonStyle(
-                shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                    RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(36.0),
-                        side: BorderSide(color: Colors.white)
-                    )
-                )
-            )),
+            child: buildElevatedButton(_bleName),
           ),
           Padding(
             padding: const EdgeInsets.all(8.0),
-            child: Text(stateDesc, style: TextStyle(fontSize: 12, color: Colors.grey), ),
+            child: Text(
+              stateDesc,
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
+            ),
           )
         ],
       ),
     );
   }
+
+  ElevatedButton buildElevatedButton(_bleName) {
+    switch (state) {
+      case 0:
+        return ElevatedButton(
+            onPressed: () {
+              setState(() {
+                state = 1;
+              });
+              BleManager.instance.scanToConnect(_bleName ?? 'Flasher BLE');
+            },
+            style: ButtonStyle(
+                backgroundColor: MaterialStateProperty.all(Colors.red),
+                shape: MaterialStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(36.0), side: const BorderSide(color: Colors.white)))),
+            child: const Text('連線'));
+      case 2:
+        return ElevatedButton(
+          onPressed: () {
+            BleManager.instance.disconnect();
+          },
+          child: const Text('中斷連線'),
+          style: ButtonStyle(backgroundColor: MaterialStateProperty.all(Colors.green), shape: MaterialStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(36.0), side: const BorderSide(color: Colors.white)))),
+        );
+      default:
+        return ElevatedButton(
+            onPressed: null,
+            style: ButtonStyle(
+                backgroundColor: MaterialStateProperty.all(Colors.amber),
+                shape: MaterialStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(36.0), side: const BorderSide(color: Colors.white)))),
+            child: const Text('連線中'));
+    }
+  }
+
   @override
   void dispose() {
     super.dispose();
@@ -104,15 +129,21 @@ class _BleConnectScreenState extends State<BleConnectScreen> {
     AskBlinkTime(),
     AskVolumeCommand(),
   ];
-  void askRequiredParameters() async{
-    for(var c in askCommands){
-      BleManager.instance.write(c.bytes);
-      await Future.delayed(Duration(milliseconds: 200));
+
+  void askRequiredParameters() async {
+    for (var c in askCommands) {
+      setState(() {
+        stateDesc = '正在詢問參數 ${c.toString()}';
+      });
+      print(stateDesc);
+      await BleManager.instance.write(c.bytes);
+      await Future.delayed(const Duration(milliseconds: 300));
+
     }
-    setState(() {
-      state = 2;
-    });
-    await Future.delayed(Duration(seconds: 2))
-    Navigator.of(context).push(MaterialPageRoute(builder: (c) => HomeScreen()));
+
+    if(appState.connectState == ConnectState.bleconnected) {
+      await Future.delayed(const Duration(seconds: 2));
+      Navigator.of(context).push(MaterialPageRoute(builder: (c) => HomeScreen()));
+    }
   }
 }

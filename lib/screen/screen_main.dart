@@ -1,8 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_wifi_udp/screen/page_controller.dart';
 import 'package:flutter_wifi_udp/screen/page_file.dart';
 import 'package:flutter_wifi_udp/screen/page_settings.dart';
 import 'package:flutter_wifi_udp/screen/page_terminal.dart';
+
+import '../constant/state.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -14,6 +18,26 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   var _index = 0;
   final _pages = const [FilePage(), ControllerPage(), TerminalPage()];
+
+  StreamSubscription<ConnectState>? stateSubs;
+
+  @override
+  void initState() {
+    super.initState();
+    stateSubs = appState.connectStateStream.listen((event) {
+      if(event == ConnectState.idle){
+        Navigator.pop(context);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    stateSubs?.cancel();
+    super.dispose();
+
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

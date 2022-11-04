@@ -35,7 +35,7 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
       pwController.text = SetupOptions.instance.options!['WiFi_Password'];
     }
     return StreamBuilder<ConnectState>(
-        stream: state.connectStateStream,
+        stream: appState.connectStateStream,
         initialData: ConnectState.idle,
         builder: (context, snapshot) {
           connectState = snapshot.data ?? ConnectState.idle;
@@ -86,32 +86,32 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
   }
 
   void connect() async {
-    state.setState(ConnectState.wificonnecting);
+    appState.setState(ConnectState.wificonnecting);
     var success = await WiFiForIoTPlugin.connect(ssidController.text,
             password: pwController.text, joinOnce: true, security: NetworkSecurity.WPA)
         .timeout(Duration(seconds: 10), onTimeout: () => false);
     udpManager.isConnected = success;
     if (udpManager.isConnected) {
-      state.setState(ConnectState.wificonnected);
+      appState.setState(ConnectState.wificonnected);
 
       WiFiForIoTPlugin.forceWifiUsage(true);
       await Future.delayed(const Duration(seconds: 1));
       await bindFtp();
     } else {
-      state.setState(ConnectState.idle);
+      appState.setState(ConnectState.idle);
     }
   }
 
   void disconnect() {
     FtpManager.instance.disconnect();
     WiFiForIoTPlugin.disconnect();
-    state.setState(ConnectState.idle);
+    appState.setState(ConnectState.idle);
   }
 
   Future bindFtp() async {
-    state.setState(ConnectState.ftpconnecting);
+    appState.setState(ConnectState.ftpconnecting);
     var success = await FtpManager.instance.connect().timeout(const Duration(seconds: 6), onTimeout: () => false) ?? false;
-    state.setState(success ? ConnectState.ftpconnected : ConnectState.idle);
+    appState.setState(success ? ConnectState.ftpconnected : ConnectState.idle);
     if (success) {
       try {
         await FtpManager.instance.refreshFiles();
@@ -125,13 +125,13 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
   Future bindTcp() async {
     var addressesIListenFrom = InternetAddress.anyIPv4;
     int portIListenOn = 2024; //0 is random
-    state.setState(ConnectState.tcpconnecting);
+    appState.setState(ConnectState.tcpconnecting);
     try {
       Socket socket = await Socket.connect('192.168.4.1', portIListenOn);
       socket.listen(
         (Uint8List event) {
-          if (state.connectState != ConnectState.tcpconnected) {
-            state.setState(ConnectState.tcpconnected);
+          if (appState.connectState != ConnectState.tcpconnected) {
+            appState.setState(ConnectState.tcpconnected);
           }
         },
         onError: (error) {
@@ -139,21 +139,21 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
             print(error);
           }
           socket.destroy();
-          state.setState(ConnectState.idle);
+          appState.setState(ConnectState.idle);
         },
         onDone: () {
           if (kDebugMode) {
             print('Server left.');
           }
           socket.destroy();
-          state.setState(ConnectState.idle);
+          appState.setState(ConnectState.idle);
         },
       );
       // send hello
       udpManager.socket = socket;
       udpManager.write(utf8.encode('hello'));
     } catch (e) {
-      state.setState(ConnectState.idle);
+      appState.setState(ConnectState.idle);
     }
   }
 
@@ -165,12 +165,17 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
         return '正在嘗試連接Wifi';
       case ConnectState.wificonnected:
         return '已連上Wifi';
+      case ConnectState.blescanning:
+        return '搜尋中';
       case ConnectState.tcpconnecting:
         return '正在建立TCP連線';
       case ConnectState.ftpconnecting:
         return '正在建立FTP連線';
+      case ConnectState.bleconnecting:
+        return '正在藍芽連線';
       case ConnectState.tcpconnected:
       case ConnectState.ftpconnected:
+      case ConnectState.bleconnected:
         return '連線成功';
     }
   }

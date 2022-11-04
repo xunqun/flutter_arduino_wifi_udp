@@ -5,55 +5,68 @@ import 'package:flutter_wifi_udp/manager/setup_options.dart';
 abstract class InCommand{
   List<int>? bytes;
 
-  static InCommand? factory(List<int> bytes){
+  static InCommand? factory(List<int> bytes, {bool persist = false}){
     String raw = utf8.decode(bytes).trim();
+    print(raw);
     var array = raw.split('=');
 
     InCommand? cmd;
     switch(array[0]){
       case ReceivedVolume.tag:
         cmd = ReceivedVolume(int.parse(array[1]));
-        SetupOptions.instance.putValue(array[0], array[1]);
+        if(persist) SetupOptions.instance.putVolume(int.parse(array[1]));
         break;
       case ReceivedBlinktime.tag:
         cmd = ReceivedBlinktime(int.parse(array[1]));
-        SetupOptions.instance.putValue(array[0], array[1]);
+        if(persist) SetupOptions.instance.putBlinkInterval(int.parse(array[1]));
         break;
       case ReceivedBootSound.tag:
         cmd = ReceivedBootSound(array[1]);
-        SetupOptions.instance.putValue(array[0], array[1]);
+        var items = array[1].split(',');
+        if(persist && items.isNotEmpty){
+          SetupOptions.instance.putEnableBootSound(int.parse(items[0]) == 1);
+          if(items.length>1) {
+            SetupOptions.instance.putBootSound(items[1].replaceAll('/r/', ''));
+          }
+        };
         break;
       case ReceivedBlinkSound.tag:
         cmd = ReceivedBlinkSound(array[1]);
-        SetupOptions.instance.putValue(array[0], array[1]);
+        var items = array[1].split(',');
+        if(persist && items.isNotEmpty){
+          SetupOptions.instance.putEnableBlinkSound(int.parse(items[0]) == 1);
+          if(items.length>1) {
+            SetupOptions.instance.putBlinkSound(items[1].replaceAll('/r/', ''));
+          }
+        };
         break;
       case ReceivedBleName.tag:
         cmd = ReceivedBleName(array[1]);
-        SetupOptions.instance.putValue(array[0], array[1]);
+        if(persist) SetupOptions.instance.putBleName(array[1]);
         break;
       case ReceivedWiFiSSID.tag:
         cmd = ReceivedWiFiSSID(array[1]);
-        SetupOptions.instance.putValue(array[0], array[1]);
+        if(persist) SetupOptions.instance.putWifiSsid(array[1]);
         break;
       case ReceivedWiFiPwd.tag:
         cmd = ReceivedWiFiPwd(array[1]);
-        SetupOptions.instance.putValue(array[0], array[1]);
+        if(persist) SetupOptions.instance.putWifiPw(array[1]);
         break;
       case ReceivedWiFiStatus.tag:
         cmd = ReceivedWiFiStatus(int.parse(array[1]));
-        SetupOptions.instance.putValue(array[0], array[1]);
+        if(persist) SetupOptions.instance.putWifiStatus(int.parse(array[1]) == 1);
         break;
       case ReceivedLightError.tag:
         cmd = ReceivedLightError(int.parse(array[1]));
-        SetupOptions.instance.putValue(array[0], array[1]);
+        if(persist) SetupOptions.instance.putLightError(int.parse(array[1]) == 1);
         break;
       case ReceivedFlashSize.tag:
         cmd = ReceivedFlashSize(array[1]);
-        SetupOptions.instance.putValue(array[0], array[1]);
+        if(persist) SetupOptions.instance.putFlashSize(array[1]);
         break;
       case ReceivedVersion.tag:
         cmd = ReceivedVersion(array[1]);
-        SetupOptions.instance.putValue(array[0], array[1]);
+        if(persist) SetupOptions.instance.putVersion(array[1]);
         break;
       case ResultOk.tag:
         cmd = ResultOk();

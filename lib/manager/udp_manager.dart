@@ -85,7 +85,7 @@ class UdpManager extends ChangeNotifier {
     // rawDatagramSocket?.close();
     _socket?.close();
     _socket = null;
-    state.setState(ConnectState.idle);
+    appState.setState(ConnectState.idle);
     WiFiForIoTPlugin.forceWifiUsage(false);
   }
 }

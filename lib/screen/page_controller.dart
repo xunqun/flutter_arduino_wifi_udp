@@ -229,8 +229,8 @@ class _ControllerPageState extends State<ControllerPage> {
             child: Column(
               children: [
                 buildEnableBootSound(),
-                buildBootSound(),
-                buildPlaySound(),
+                // buildBootSound(),
+                // buildPlaySound(),
                 ElevatedButton(
                     onPressed: () {
                       sendCommand(AskBootSoundCommnad());
@@ -247,7 +247,7 @@ class _ControllerPageState extends State<ControllerPage> {
               children: [
                 buildBlinkInterval(),
                 buildEnalbeBlinkSound(),
-                buildBlinkSound(),
+                // buildBlinkSound(),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [

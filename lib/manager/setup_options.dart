@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class SetupOptions {
   static var instance = SetupOptions._();
-  Map<String, dynamic>? options;
+  Map<String, dynamic> options = {};
 
   final StreamController<Map<String, dynamic>?> _dataController = StreamController<Map<String, dynamic>?>.broadcast();
 
@@ -14,7 +14,6 @@ class SetupOptions {
   Stream<Map<String, dynamic>?> get dataStream => _dataController.stream;
 
   SetupOptions._() {
-    _getFromPersist();
   }
 
   _getFromPersist() {
@@ -22,8 +21,11 @@ class SetupOptions {
       var json = pref.getString('setup.json');
       if (json != null && json.isNotEmpty) {
         options = jsonDecode(json);
-        _dataSink.add(options);
+
+      }else{
+        options = {};
       }
+      _dataSink.add(options);
     });
   }
 
@@ -40,7 +42,7 @@ class SetupOptions {
   }
 
   putValue(String name, dynamic value) {
-    options![name] = value;
+    options[name] = value;
     _dataSink.add(options);
     _persist();
   }
@@ -70,4 +72,8 @@ class SetupOptions {
   void putLightError(bool enable) => putValue('Light_Error_EN', enable ? 1 : 0);
 
   void putPlaySound(String playSound) => putValue('Play_Sound', playSound);
+
+  void putFlashSize(String size) => putValue('Flash_Size', size);
+
+  void putVersion(String version) => putValue('Version', version);
 }

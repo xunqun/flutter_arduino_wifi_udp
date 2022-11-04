@@ -1,14 +1,14 @@
 import 'dart:async';
 
 enum ConnectState{
-  idle, wificonnecting, wificonnected, tcpconnecting, tcpconnected, ftpconnecting, ftpconnected
+  idle, wificonnecting, wificonnected, tcpconnecting, tcpconnected, ftpconnecting, blescanning, bleconnecting, bleconnected, ftpconnected
 }
 
 // Singleton
-AppState state = AppState();
+AppState appState = AppState();
 
 class AppState{
-  StreamController<ConnectState> _connectStateController = StreamController<ConnectState>();
+  StreamController<ConnectState> _connectStateController = StreamController.broadcast();
   StreamSink<ConnectState> get _connectStateSink => _connectStateController.sink;
   Stream<ConnectState> get connectStateStream => _connectStateController.stream;
   ConnectState connectState = ConnectState.idle;
