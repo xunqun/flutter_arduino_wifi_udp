@@ -8,7 +8,6 @@ import 'package:intl/intl.dart';
 import 'package:ftpconnect/src/dto/ftp_entry.dart';
 import 'package:wifi_iot/wifi_iot.dart';
 
-import '../constant/state.dart';
 import '../manager/udp_manager.dart';
 import '../stream/ftp_observer.dart';
 
@@ -109,20 +108,20 @@ class _FtpBrowserState extends State<FtpBrowser> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       ElevatedButton(
-                        onPressed: () {
+                        onPressed: state == 0 ? () {
                           var ssid = SetupOptions.instance.getValue('WiFi_SSID');
                           var pw = SetupOptions.instance.getValue('WiFi_Password');
                           if (ssid != null && pw != null) {
                             connect(ssid, pw);
                           }
-                        },
+                        }: null,
                         child: Padding(
                           padding: const EdgeInsets.all(16.0),
-                          child: Text('連接檔案目錄'),
+                          child: Text(state == 0 ? '連接檔案目錄' : '連接中．．．'),
                         ),
                         style: ButtonStyle(
                             foregroundColor: MaterialStateProperty.all(Colors.white),
-                            backgroundColor: MaterialStateProperty.all(Colors.red),
+                            backgroundColor: MaterialStateProperty.all( state == 0 ? Colors.red: Colors.yellow),
                             shape: MaterialStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(36.0),
                                 side: const BorderSide(color: Colors.white)))),
