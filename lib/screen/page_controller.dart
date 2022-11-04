@@ -349,7 +349,7 @@ class _ControllerPageState extends State<ControllerPage> {
           const Text('Light learning'),
           IconButton(onPressed: (){
             BleManager.instance.sendCommand(AskLightLearningCommand());
-          }, icon: const Icon(Icons.send))
+          }, icon: const Icon(Icons.upload))
         ],
       ),
     );
@@ -641,8 +641,7 @@ class _ControllerPageState extends State<ControllerPage> {
     bleNameController.text = _bleName;
     return Row(
       children: [
-        SizedBox(
-          width: 200,
+        Expanded(
           child: TextFormField(
             controller: bleNameController,
             decoration: InputDecoration(labelText: 'BLE name'),
@@ -659,7 +658,7 @@ class _ControllerPageState extends State<ControllerPage> {
                 BleManager.instance.sendCommand(cmd);
               }
             },
-            icon: const Icon(Icons.send))
+            icon: const Icon(Icons.upload))
       ],
     );
   }
@@ -670,8 +669,8 @@ class _ControllerPageState extends State<ControllerPage> {
     wifiSsidController.text = _wifiSsid;
     return Row(
       children: [
-        SizedBox(
-          width: 200,
+        Expanded(
+          flex: 1,
           child: TextFormField(
             controller: wifiSsidController,
             decoration: InputDecoration(
@@ -690,7 +689,7 @@ class _ControllerPageState extends State<ControllerPage> {
                 BleManager.instance.sendCommand(cmd);
               }
             },
-            icon: const Icon(Icons.send))
+            icon: const Icon(Icons.upload))
       ],
     );
   }
@@ -701,8 +700,7 @@ class _ControllerPageState extends State<ControllerPage> {
     wifiPwController.text = _wifiPw;
     return Row(
       children: [
-        SizedBox(
-          width: 200,
+        Expanded(
           child: TextFormField(
             controller: wifiPwController,
             decoration: InputDecoration(labelText: 'Wifi Password'),
@@ -719,7 +717,7 @@ class _ControllerPageState extends State<ControllerPage> {
                 BleManager.instance.sendCommand(cmd);
               }
             },
-            icon: const Icon(Icons.send))
+            icon: const Icon(Icons.upload))
       ],
     );
   }

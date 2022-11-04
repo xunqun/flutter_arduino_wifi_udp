@@ -50,7 +50,11 @@ class _FilePageState extends State<FilePage> {
             title: const Text('上傳檔案'),
             subtitle: const Text('找裝置中的檔案'),
             trailing: busy ? const CircularProgressIndicator() : const Icon(Icons.search),
-            onTap: state == 2 ? () { pickFile(); } : null,
+            onTap: () {
+              if(state == 2) {
+                pickFile();
+              }
+            }
           ),
         ],
       ),
@@ -98,7 +102,7 @@ class _FtpBrowserState extends State<FtpBrowser> {
         initialData: FtpFilesObserver.instance().getFiles(),
         builder: (context, snapshot) {
           var files = snapshot.data ?? [];
-          return files.isEmpty
+          return state != 2
               ? Padding(
                   padding: EdgeInsets.all(16.0),
                   child: Column(
@@ -153,6 +157,7 @@ class _FtpBrowserState extends State<FtpBrowser> {
   void dispose() {
     FtpManager.instance.disconnect();
     WiFiForIoTPlugin.disconnect();
+    state = 0;
     super.dispose();
   }
 
@@ -185,10 +190,7 @@ class _FtpBrowserState extends State<FtpBrowser> {
   }
 
   Future bindFtp() async {
-    appState.setState(ConnectState.ftpconnecting);
-    var success =
-        await FtpManager.instance.connect().timeout(const Duration(seconds: 6), onTimeout: () => false) ?? false;
-    appState.setState(success ? ConnectState.ftpconnected : ConnectState.idle);
+    var success = await FtpManager.instance.connect().timeout(const Duration(seconds: 6), onTimeout: () => false) ?? false;
     setState(() {
       state = success ? 2 : 0;
     });
