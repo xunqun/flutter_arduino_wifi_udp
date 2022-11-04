@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_wifi_udp/command/outcommand.dart';
 import 'package:flutter_wifi_udp/constant/state.dart';
 import 'package:flutter_wifi_udp/manager/ble_manager.dart';
@@ -36,6 +35,12 @@ class _BleConnectScreenState extends State<BleConnectScreen> {
         case ConnectState.bleconnecting:
           setState(() {
             stateDesc = '正在連接中';
+            state = 1;
+          });
+          break;
+        case ConnectState.blescanning:
+          setState(() {
+            stateDesc = '搜尋中';
             state = 1;
           });
           break;
@@ -81,12 +86,10 @@ class _BleConnectScreenState extends State<BleConnectScreen> {
       case 0:
         return ElevatedButton(
             onPressed: () {
-              setState(() {
-                state = 1;
-              });
               BleManager.instance.scanToConnect(_bleName ?? 'Flasher BLE');
             },
             style: ButtonStyle(
+              foregroundColor: MaterialStateProperty.all(Colors.white),
                 backgroundColor: MaterialStateProperty.all(Colors.red),
                 shape: MaterialStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(36.0), side: const BorderSide(color: Colors.white)))),
@@ -97,7 +100,8 @@ class _BleConnectScreenState extends State<BleConnectScreen> {
             BleManager.instance.disconnect();
           },
           child: const Text('中斷連線'),
-          style: ButtonStyle(backgroundColor: MaterialStateProperty.all(Colors.green), shape: MaterialStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(
+          style: ButtonStyle(backgroundColor: MaterialStateProperty.all(Colors.green), foregroundColor: MaterialStateProperty.all(Colors.white),
+              shape: MaterialStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(36.0), side: const BorderSide(color: Colors.white)))),
         );
       default:
@@ -105,6 +109,7 @@ class _BleConnectScreenState extends State<BleConnectScreen> {
             onPressed: null,
             style: ButtonStyle(
                 backgroundColor: MaterialStateProperty.all(Colors.amber),
+                foregroundColor: MaterialStateProperty.all(Colors.white),
                 shape: MaterialStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(36.0), side: const BorderSide(color: Colors.white)))),
             child: const Text('連線中'));
@@ -136,14 +141,13 @@ class _BleConnectScreenState extends State<BleConnectScreen> {
         stateDesc = '正在詢問參數 ${c.toString()}';
       });
       print(stateDesc);
-      await BleManager.instance.write(c.bytes);
-      await Future.delayed(const Duration(milliseconds: 300));
-
+      await BleManager.instance.sendCommand(c);
+      await Future.delayed(const Duration(milliseconds: 150));
     }
 
     if(appState.connectState == ConnectState.bleconnected) {
-      await Future.delayed(const Duration(seconds: 2));
-      Navigator.of(context).push(MaterialPageRoute(builder: (c) => HomeScreen()));
+      await Future.delayed(const Duration(seconds: 1));
+      Navigator.of(context).push(MaterialPageRoute(builder: (c) => const HomeScreen()));
     }
   }
 }

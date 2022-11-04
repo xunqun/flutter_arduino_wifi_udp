@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
@@ -7,6 +8,7 @@ import 'package:flutter_wifi_udp/command/incommand.dart';
 import 'package:flutter_wifi_udp/manager/log_manager.dart';
 import 'package:flutter_wifi_udp/utility/string_tool.dart';
 
+import '../command/outcommand.dart';
 import '../constant/state.dart';
 
 class BleManager {
@@ -51,8 +53,9 @@ class BleManager {
 
   scanToConnect(String name) {
     _name = name;
+    _device?.disconnect();
     listenToScan();
-    _blue.startScan(timeout: const Duration(seconds: 6), allowDuplicates: false);
+    _blue.startScan(timeout: const Duration(seconds: 6), allowDuplicates: true);
     Future.delayed(const Duration(seconds: 6)).then((value) {
       _blue.stopScan();
       if(appState.connectState == ConnectState.blescanning) {
@@ -71,14 +74,42 @@ class BleManager {
   destory() {
     _scanSubs?.cancel();
     _byteSubs?.cancel();
-    disconnect();
     _blue.stopScan();
     _instance = null;
-    appState.setState(ConnectState.idle);
+    disconnect();
   }
 
   write(List<int> bytes) {
+    print(bytes.map((e) => '0x${e.toRadixString(16)}').toList().toString());
     _characteristic?.write(bytes, withoutResponse: true);
+  }
+
+  var writting = false;
+  var wrintingTimeStamp = 0;
+  Future sendCommand(OutCommanad cmd) async{
+    if (BleManager.instance.state == BluetoothDeviceState.connected) {
+      print(cmd.string);
+      var now = DateTime.now().millisecondsSinceEpoch;
+      if (now - wrintingTimeStamp > 1000) writting = false; // avoid send too many at one time & stuck
+      if (!writting) {
+        var sendSize = 64;
+        if (cmd.bytes.length > sendSize) {
+          var counter = 0;
+          while (counter < cmd.bytes.length) {
+            var subcmd = cmd.bytes.sublist(counter, min(counter + sendSize, cmd.bytes.length));
+            await BleManager.instance.write(subcmd);
+            print('${subcmd.map((e) => e.toRadixString(16).padLeft(2, '0')).join()}');
+            await Future.delayed(const Duration(milliseconds: 150));
+            counter += sendSize;
+          }
+        } else {
+          BleManager.instance.write(cmd.bytes);
+          print('${cmd.bytes.map((e) => e.toRadixString(16).padLeft(2, '0')).join()}');
+        }
+        writting = false;
+        logManager.addSendRaw(cmd.bytes, msg: cmd.toString(), desc: cmd.string);
+      }
+    }
   }
 
   _handleConnect() async {
@@ -131,7 +162,7 @@ class BleManager {
           // this is end bytes
           _buffer.add(raw[i]);
           _buffer.add(raw[i+1]);
-          print(_buffer.toList().map((e) => '0x${e.toRadixString(16)}').toList().toString());
+
           _handleData(_buffer);
           _buffer.clear();
           break;
@@ -143,6 +174,7 @@ class BleManager {
   }
 
   void _handleData(List<int> buffer) {
+    print(_buffer.toList().map((e) => '0x${e.toRadixString(16)}').toList().toString());
     var cmd = InCommand.factory(buffer, persist: true);
     if (cmd != null) {
       logManager.addReceiveRaw(buffer, msg: cmd.toString(), desc: utf8.decode(buffer));

@@ -81,7 +81,7 @@ class _ControllerPageState extends State<ControllerPage> {
     _lightError = map.containsKey('Light_Error_EN') ? map['Light_Error_EN'] == 1 : false;
     // _lightLearning = map.containsKey('LightLearning') ? map['LightLearning'] == 1 : false;
     // _bleUnbound = map.containsKey('BLEUnbond') ? map['BLEUnbond'] == 1 : false;
-    _flashSize = map.containsKey('FlashSize') ? map['FlashSize'] : '0,0';
+    _flashSize = map.containsKey('Flash_Size') ? map['Flash_Size'] : '0,0';
     _version = map.containsKey('Version') ? map['Version'] : 'unknow';
   }
 
@@ -206,21 +206,19 @@ class _ControllerPageState extends State<ControllerPage> {
         Card(
           child: Padding(
             padding: const EdgeInsets.all(16.0),
-            child: Column(
-              children: [
-                buildSetVolumn(),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    ElevatedButton(
-                        onPressed: () {
-                          sendCommand(AskVolumeCommand());
-                        },
-                        child: Text('詢問音量')),
-                  ],
-                )
-              ],
-            ),
+            child: buildSetVolumn(),
+          ),
+        ),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: buildBlinkInterval(),
+          ),
+        ),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: buildEnableBootSound(),
           ),
         ),
         Card(
@@ -228,41 +226,8 @@ class _ControllerPageState extends State<ControllerPage> {
             padding: const EdgeInsets.all(16.0),
             child: Column(
               children: [
-                buildEnableBootSound(),
-                // buildBootSound(),
-                // buildPlaySound(),
-                ElevatedButton(
-                    onPressed: () {
-                      sendCommand(AskBootSoundCommnad());
-                    },
-                    child: Text("詢問開機音效"))
-              ],
-            ),
-          ),
-        ),
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              children: [
-                buildBlinkInterval(),
-                buildEnalbeBlinkSound(),
-                // buildBlinkSound(),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    ElevatedButton(
-                        onPressed: () {
-                          sendCommand(AskBlinkTime());
-                        },
-                        child: Text('詢問閃爍時間')),
-                    ElevatedButton(
-                        onPressed: () {
-                          sendCommand(AskBlinkSoundCommand());
-                        },
-                        child: Text("詢問閃爍音效")),
-                  ],
-                )
+
+                buildEnableBlinkSound(),
               ],
             ),
           ),
@@ -276,26 +241,6 @@ class _ControllerPageState extends State<ControllerPage> {
                 buildWifiSsid(),
                 buildWifiPw(),
                 buildBleName(),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    ElevatedButton(
-                        onPressed: () {
-                          sendCommand(AskWifiSsidCommand());
-                        },
-                        child: Text('詢問SSID')),
-                    ElevatedButton(
-                        onPressed: () {
-                          sendCommand(AskWifiPwCommand());
-                        },
-                        child: Text('詢問PW')),
-                    ElevatedButton(
-                        onPressed: () {
-                          sendCommand(AskBleNameCommand());
-                        },
-                        child: Text('詢問BLE')),
-                  ],
-                )
               ],
             ),
           ),
@@ -307,42 +252,33 @@ class _ControllerPageState extends State<ControllerPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 buildLightError(),
-                buildLightLearning(),
-                buildBleUnbound(),
-                buildFlashSize(),
-                buildVersion(),
-                Wrap(
-                  alignment: WrapAlignment.spaceEvenly,
-                  children: [
-                    ElevatedButton(
-                        onPressed: () {
-                          sendCommand(AskLightErrorCommand());
-                        },
-                        child: Text('詢問LightError')),
-                    ElevatedButton(
-                        onPressed: () {
-                          sendCommand(AskFlashSizeCommand());
-                        },
-                        child: Text('詢問Size')),
-                    ElevatedButton(
-                        onPressed: () {
-                          sendCommand(AskVersionCommand());
-                        },
-                        child: Text('詢問Version')),
-                    ElevatedButton(
-                        onPressed: () {
-                          sendCommand(AskBleUnboundCommand());
-                        },
-                        child: Text('詢問BleUnbound')),
-                    ElevatedButton(
-                        onPressed: () {
-                          sendCommand(AskLightLearningCommand());
-                        },
-                        child: Text('詢問LightLearning')),
-                  ],
-                )
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                      onPressed: () {
+                        BleManager.instance.sendCommand(AskLightLearningCommand());
+                      },
+                      child: Text('方向燈負載學習')),
+                ),
+
               ],
             ),
+          ),
+        ),
+        Card(child: Column(
+          children: [
+            buildFlashSize(),
+            buildVersion(),
+          ],
+        ),),
+
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: () {
+              BleManager.instance.sendCommand(AskBleUnboundCommand());
+            },
+            child: const Text('解除藍芽綁定'),
           ),
         ),
         buildFactorySetup(),
@@ -383,7 +319,7 @@ class _ControllerPageState extends State<ControllerPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text('Version'),
+          const Text('版本'),
           Text(
             _version.toString().toUpperCase(),
             style: TextStyle(fontWeight: FontWeight.bold),
@@ -399,7 +335,7 @@ class _ControllerPageState extends State<ControllerPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text('Flash Size'),
+          const Text('Flash Size'),
           Text(
             '${_flashSize.toUpperCase()} KB',
             style: TextStyle(fontWeight: FontWeight.bold),
@@ -409,18 +345,6 @@ class _ControllerPageState extends State<ControllerPage> {
     );
   }
 
-  Widget buildBleUnbound() {
-    return Padding(
-      padding: const EdgeInsets.only(top: 16.0, bottom: 16.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text('BLE Unbound'),
-          IconButton(onPressed: (){}, icon: const Icon(Icons.send),),
-        ],
-      ),
-    );
-  }
 
   Widget buildLightLearning() {
     return Padding(
@@ -428,9 +352,9 @@ class _ControllerPageState extends State<ControllerPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text('Light learning'),
+          const Text('Light learning'),
           IconButton(onPressed: (){
-            sendCommand(AskLightLearningCommand());
+            BleManager.instance.sendCommand(AskLightLearningCommand());
           }, icon: const Icon(Icons.send))
         ],
       ),
@@ -440,7 +364,7 @@ class _ControllerPageState extends State<ControllerPage> {
   Widget buildLightError() {
     return Row(
       children: [
-        const Text('Light error'),
+        const Text('方向燈失效功能'),
         const Spacer(),
         Switch(
             value: _lightError,
@@ -450,44 +374,38 @@ class _ControllerPageState extends State<ControllerPage> {
               });
               SetupOptions.instance.putLightError(_lightError);
               var cmd = SetLightErrorCommand(_lightError);
-              sendCommand(cmd);
+              BleManager.instance.sendCommand(cmd);
             }),
       ],
     );
   }
 
   Widget buildSetupSave() {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-              onPressed: () {
-                var cmd = SetupSaveCommand();
-                sendCommand(cmd);
-              },
-              child: Text('Setup Save'))),
-    );
+    return SizedBox(
+        width: double.infinity,
+        child: ElevatedButton(
+            onPressed: () {
+              var cmd = SetupSaveCommand();
+              BleManager.instance.sendCommand(cmd);
+            },
+            child: const Text('儲存設定')));
   }
 
   Widget buildFactorySetup() {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-              onPressed: () {
-                var cmd = FactoryResetCommand();
-                sendCommand(cmd);
-              },
-              child: Text('Factory Setup'))),
-    );
+    return SizedBox(
+        width: double.infinity,
+        child: ElevatedButton(
+            onPressed: () {
+              var cmd = FactoryResetCommand();
+              BleManager.instance.sendCommand(cmd);
+            },
+            child: const Text('恢復«原廠設定')));
   }
 
   Widget buildWifiSwitcher() {
     return Row(
       children: [
-        Text('Wifi 開/關'),
+        const Text('Wifi 開/關'),
         Switch(
             value: _wifiOn,
             onChanged: (enable) {
@@ -496,7 +414,7 @@ class _ControllerPageState extends State<ControllerPage> {
               });
               SetupOptions.instance.putWifiStatus(enable);
               var cmd = SetWifiStatusCommand(enable);
-              sendCommand(cmd);
+              BleManager.instance.sendCommand(cmd);
             })
       ],
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -534,17 +452,17 @@ class _ControllerPageState extends State<ControllerPage> {
             onPressed: () {
               if (_playSound.isNotEmpty) {
                 var cmd = SetPlaySoundCommand(_playSound);
-                sendCommand(cmd);
+                BleManager.instance.sendCommand(cmd);
               }
             },
             child: Text('Play')),
-        SizedBox(
+        const SizedBox(
           width: 8,
         ),
         ElevatedButton(
           onPressed: () {
             var cmd = SetStopSoundCommand();
-            sendCommand(cmd);
+            BleManager.instance.sendCommand(cmd);
           },
           child: Text('Stop'),
         ),
@@ -583,7 +501,7 @@ class _ControllerPageState extends State<ControllerPage> {
                   });
                   SetupOptions.instance.putBlinkSound(_selectedBootSound);
                   var cmd = SetBlinkSoundCommand(_enableBlinkSound, _selectedBlinkSound);
-                  sendCommand(cmd);
+                  BleManager.instance.sendCommand(cmd);
                 }
               : null,
           enableFeedback: true,
@@ -624,7 +542,7 @@ class _ControllerPageState extends State<ControllerPage> {
                   });
                   SetupOptions.instance.putBootSound(_selectedBootSound);
                   var cmd = SetBootSoundCommand(_enableBootSound, _selectedBootSound);
-                  sendCommand(cmd);
+                  BleManager.instance.sendCommand(cmd);
                 }
               : null,
           enableFeedback: true,
@@ -634,7 +552,7 @@ class _ControllerPageState extends State<ControllerPage> {
     );
   }
 
-  Widget buildEnalbeBlinkSound() {
+  Widget buildEnableBlinkSound() {
     return Row(
       children: [
         Text('自訂閃爍音效'),
@@ -647,7 +565,7 @@ class _ControllerPageState extends State<ControllerPage> {
               });
               SetupOptions.instance.putEnableBlinkSound(enable);
               var cmd = SetBlinkSoundCommand(_enableBlinkSound, _selectedBlinkSound);
-              sendCommand(cmd);
+              BleManager.instance.sendCommand(cmd);
             })
       ],
     );
@@ -664,8 +582,8 @@ class _ControllerPageState extends State<ControllerPage> {
               setState(() {
                 _enableBootSound = enable;
                 SetupOptions.instance.putEnableBootSound(enable);
-                var cmd = SetBootSoundCommand(enable, _selectedBootSound);
-                sendCommand(cmd);
+                var cmd = SetBootSoundCommand(enable, null);
+                BleManager.instance.sendCommand(cmd);
               });
             })
       ],
@@ -687,7 +605,7 @@ class _ControllerPageState extends State<ControllerPage> {
           onChangeEnd: (double value) {
             var cmd = SetBlinkTimeCommand(_blink.toInt());
             SetupOptions.instance.putBlinkInterval(_blink.toInt());
-            sendCommand(cmd);
+            BleManager.instance.sendCommand(cmd);
           },
           value: _blink.toDouble(),
           min: 600,
@@ -701,8 +619,8 @@ class _ControllerPageState extends State<ControllerPage> {
   Widget buildSetVolumn() {
     return Row(
       children: [
-        Text('調整音量'),
-        Spacer(),
+        const Text('調整音量'),
+        const Spacer(),
         Text('${_volume.toInt()}'),
         Slider(
           onChanged: (double value) {
@@ -713,7 +631,7 @@ class _ControllerPageState extends State<ControllerPage> {
           onChangeEnd: (double value) {
             var cmd = SetVolumeCommand(_volume.toInt());
             SetupOptions.instance.putVolume(_volume.toInt());
-            sendCommand(cmd);
+            BleManager.instance.sendCommand(cmd);
           },
           value: _volume.toDouble(),
           min: 0,
@@ -744,7 +662,7 @@ class _ControllerPageState extends State<ControllerPage> {
               SetupOptions.instance.putBleName(_bleName);
               if (_bleName.isNotEmpty) {
                 var cmd = SetBleNameCommand(_bleName);
-                sendCommand(cmd);
+                BleManager.instance.sendCommand(cmd);
               }
             },
             icon: const Icon(Icons.send))
@@ -775,7 +693,7 @@ class _ControllerPageState extends State<ControllerPage> {
               SetupOptions.instance.putWifiSsid(_wifiSsid);
               if (_wifiSsid.isNotEmpty) {
                 var cmd = SetWifiSsidCommand(_wifiSsid);
-                sendCommand(cmd);
+                BleManager.instance.sendCommand(cmd);
               }
             },
             icon: const Icon(Icons.send))
@@ -804,7 +722,7 @@ class _ControllerPageState extends State<ControllerPage> {
               SetupOptions.instance.putWifiPw(_wifiPw);
               if (_wifiPw.isNotEmpty) {
                 var cmd = SetWifiPwCommand(_wifiPw);
-                sendCommand(cmd);
+                BleManager.instance.sendCommand(cmd);
               }
             },
             icon: const Icon(Icons.send))
@@ -831,30 +749,6 @@ class _ControllerPageState extends State<ControllerPage> {
     }
   }
 
-  var writting = false;
-  var wrintingTimeStamp = 0;
-  void sendCommand(OutCommanad cmd) async{
-    if (BleManager.instance.state == BluetoothDeviceState.connected) {
-      var now = DateTime.now().millisecondsSinceEpoch;
-      if (now - wrintingTimeStamp > 1000) writting = false; // avoid send too many at one time & stuck
-      if (!writting) {
-        var sendSize = 64;
-        if (cmd.bytes.length > sendSize) {
-          var counter = 0;
-          while (counter < cmd.bytes.length) {
-            var subcmd = cmd.bytes.sublist(counter, min(counter + sendSize, cmd.bytes.length));
-            await BleManager.instance.write(subcmd);
-            // print('send bytes ${subcmd.length}');
-            print('${subcmd.map((e) => e.toRadixString(16).padLeft(2, '0')).join()}');
-            await Future.delayed(const Duration(milliseconds: 150));
-            counter += sendSize;
-          }
-        } else {
-          BleManager.instance.write(cmd.bytes);
-        }
-        writting = false;
-        logManager.addSendRaw(cmd.bytes, msg: cmd.toString(), desc: cmd.string);
-      }
-    }
-  }
+
+
 }

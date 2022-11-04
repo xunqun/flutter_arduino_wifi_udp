@@ -29,7 +29,7 @@ class LogManager extends ChangeNotifier{
     if(_queue.length >= _max_count){
       _queue.removeFirst();
     }
-    _queue.add(Log(DateTime.now(), LogType.receiveraw, raw: raw, title: msg, description: desc));
+    _queue.add(Log(DateTime.now(), LogType.receiveraw, raw: raw.toList(), title: msg, description: desc));
     notifyListeners();
   }
 

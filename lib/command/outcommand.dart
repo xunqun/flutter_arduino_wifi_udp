@@ -51,26 +51,31 @@ import 'package:flutter_wifi_udp/utility/byte_tool.dart';
 //   get bytes => begin + ByteTool.int32bytes(length, 1) + raw + ByteTool.int32bytes(counter, 2) + ByteTool.int32bytes(checkSum, 1) + end;
 // }
 
-abstract class OutCommanad{
+abstract class OutCommanad {
   List<int> get bytes;
+
   String get string;
 }
 
 /**
  * SetVolume=15;
  */
-class SetVolumeCommand extends OutCommanad{
+class SetVolumeCommand extends OutCommanad {
   int volume;
+
   SetVolumeCommand(this.volume);
+
   @override
   get bytes => utf8.encode(string);
+
   @override
   get string => 'Volume=$volume\r\n';
 }
 
-class AskVolumeCommand extends OutCommanad{
+class AskVolumeCommand extends OutCommanad {
   @override
   get bytes => utf8.encode(string);
+
   @override
   get string => 'Volume?\r\n';
 }
@@ -78,18 +83,21 @@ class AskVolumeCommand extends OutCommanad{
 /**
  * SetBlinkTime=700;
  */
-class SetBlinkTimeCommand extends OutCommanad{
+class SetBlinkTimeCommand extends OutCommanad {
   int blink; //(單位 ms, 預設600)
   SetBlinkTimeCommand(this.blink);
+
   @override
   get bytes => utf8.encode(string);
+
   @override
   get string => 'BlinkTime=$blink\r\n';
 }
 
-class AskBlinkTime extends OutCommanad{
+class AskBlinkTime extends OutCommanad {
   @override
   get bytes => utf8.encode(string);
+
   @override
   get string => 'BlinkTime?\r\n';
 }
@@ -97,103 +105,141 @@ class AskBlinkTime extends OutCommanad{
 /**
  * SetBootSound=1;
  */
-class SetBootSoundCommand extends OutCommanad{
+class SetBootSoundCommand extends OutCommanad {
   bool enable;
-  String path; // (0:關閉開機音效; 1:開啟開機音效)
+  String? path; // (0:關閉開機音效; 1:開啟開機音效)
   SetBootSoundCommand(this.enable, this.path);
+
   get bytes => utf8.encode(string);
-  get string => enable ? 'BootSound=${enable ? 1 : 0},\"/r/$path\"\r\n' : 'BootSound=0';
-  // get string => 'BootSound=${enable ? 1 : 0},/r/$path\r\n';
+
+  get string {
+    if (path == null || path!.isEmpty) {
+      return 'BootSound=${enable ? 1 : 0}';
+    } else {
+      return enable ? 'BootSound=${enable ? 1 : 0},\"/r/$path\"\r\n' : 'BootSound=0';
+    }
+  }
 }
 
-class AskBootSoundCommnad extends OutCommanad{
+class AskBootSoundCommnad extends OutCommanad {
   get bytes => utf8.encode(string);
+
   get string => 'BootSound?\r\n';
 }
 
 /**
  * SetBlinkSoundMode=1;
  */
-class SetBlinkSoundCommand extends OutCommanad{
+class SetBlinkSoundCommand extends OutCommanad {
   bool enable; // (0:原廠音效,無法調音量及時間; 1:使用者自訂)
-  String path;
+  String? path;
+
   SetBlinkSoundCommand(this.enable, this.path);
+
   get bytes => utf8.encode(string);
-  get string => enable ? 'BlinkSound=${enable ? 1 : 0},\"/r/$path\"\r\n': 'BlinkSound=0';
+
+  // get string => enable ? 'BlinkSound=${enable ? 1 : 0},\"/r/$path\"\r\n': 'BlinkSound=0';
+  get string {
+    if (path == null || path!.isEmpty) {
+      return 'BlinkSound=${enable ? 1 : 0}';
+    } else {
+      return enable ? 'BlinkSound=${enable ? 1 : 0},\"/r/$path\"\r\n' : 'BlinkSound=0';
+    }
+  }
 }
 
-class AskBlinkSoundCommand extends OutCommanad{
+class AskBlinkSoundCommand extends OutCommanad {
   get bytes => utf8.encode(string);
+
   get string => 'BlinkSound?\r\n';
 }
 
 /**
  * BLE name
  */
-class SetBleNameCommand extends OutCommanad{
+class SetBleNameCommand extends OutCommanad {
   String name;
+
   SetBleNameCommand(this.name);
+
   get bytes => utf8.encode(string);
+
   get string => 'BLEName=\"$name\"\r\n';
 }
 
-class AskBleNameCommand extends OutCommanad{
+class AskBleNameCommand extends OutCommanad {
   get bytes => utf8.encode(string);
+
   get string => 'BLEName?\r\n';
 }
 
 /**
  * Wifi SSID
  */
-class SetWifiSsidCommand extends OutCommanad{
+class SetWifiSsidCommand extends OutCommanad {
   String name;
+
   SetWifiSsidCommand(this.name);
+
   get bytes => utf8.encode(string);
+
   get string => 'WiFiSSID=\"$name\"\r\n';
 }
 
-class AskWifiSsidCommand extends OutCommanad{
+class AskWifiSsidCommand extends OutCommanad {
   get bytes => utf8.encode(string);
+
   get string => 'WiFiSSID?\r\n';
 }
 
 /**
  * Wifi Password
  */
-class SetWifiPwCommand extends OutCommanad{
+class SetWifiPwCommand extends OutCommanad {
   String pw;
+
   SetWifiPwCommand(this.pw);
+
   get bytes => utf8.encode(string);
+
   get string => 'WiFiPwd=\"$pw\"\r\n';
 }
 
-class AskWifiPwCommand extends OutCommanad{
+class AskWifiPwCommand extends OutCommanad {
   get bytes => utf8.encode(string);
+
   get string => 'WiFiPwd?\r\n';
 }
 
 /**
  * Wifi status
  */
-class SetWifiStatusCommand extends OutCommanad{
+class SetWifiStatusCommand extends OutCommanad {
   bool enable;
+
   SetWifiStatusCommand(this.enable);
+
   get bytes => utf8.encode(string);
+
   get string => 'WiFiStatus=1\r\n';
 }
 
 /**
  * Play sound
  */
-class SetPlaySoundCommand extends OutCommanad{
+class SetPlaySoundCommand extends OutCommanad {
   String path;
+
   SetPlaySoundCommand(this.path);
+
   get bytes => utf8.encode(string);
+
   get string => 'PlaySound=\"/r/$path\"\r\n';
 }
 
-class SetStopSoundCommand extends OutCommanad{
+class SetStopSoundCommand extends OutCommanad {
   get bytes => utf8.encode(string);
+
   get string => 'StopSound\r\n';
 }
 
@@ -201,45 +247,55 @@ class SetStopSoundCommand extends OutCommanad{
  * Factory reset
  */
 
-class FactoryResetCommand extends OutCommanad{
+class FactoryResetCommand extends OutCommanad {
   get bytes => utf8.encode(string);
+
   get string => 'FactorySetup\r\n';
 }
 
-class SetupSaveCommand extends OutCommanad{
+class SetupSaveCommand extends OutCommanad {
   get bytes => utf8.encode(string);
+
   get string => 'SetupSave\r\n';
 }
 
-class SetLightErrorCommand extends OutCommanad{
+class SetLightErrorCommand extends OutCommanad {
   bool enable;
+
   SetLightErrorCommand(this.enable);
+
   get bytes => utf8.encode(string);
-  get string => 'LightError=${enable?1:0}\r\n';
+
+  get string => 'LightError=${enable ? 1 : 0}\r\n';
 }
 
-class AskLightErrorCommand extends OutCommanad{
+class AskLightErrorCommand extends OutCommanad {
   get bytes => utf8.encode(string);
+
   get string => 'LightError?\r\n';
 }
 
-class AskLightLearningCommand extends OutCommanad{
+class AskLightLearningCommand extends OutCommanad {
   get bytes => utf8.encode(string);
+
   get string => 'LightLearning\r\n';
 }
 
-class AskBleUnboundCommand extends OutCommanad{
+class AskBleUnboundCommand extends OutCommanad {
   get bytes => utf8.encode(string);
+
   get string => 'BLEUnbond\r\n';
 }
 
-class AskFlashSizeCommand extends OutCommanad{
+class AskFlashSizeCommand extends OutCommanad {
   get bytes => utf8.encode(string);
+
   get string => 'FlashSize?\r\n';
 }
 
-class AskVersionCommand extends OutCommanad{
+class AskVersionCommand extends OutCommanad {
   get bytes => utf8.encode(string);
+
   get string => 'Version?\r\n';
 }
 

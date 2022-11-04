@@ -17,7 +17,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   var _index = 0;
-  final _pages = const [FilePage(), ControllerPage(), TerminalPage()];
+  final _pages = const [ControllerPage(), FilePage(),  TerminalPage()];
 
   StreamSubscription<ConnectState>? stateSubs;
 
@@ -35,7 +35,6 @@ class _HomeScreenState extends State<HomeScreen> {
   void dispose() {
     stateSubs?.cancel();
     super.dispose();
-
   }
 
   @override
@@ -46,8 +45,8 @@ class _HomeScreenState extends State<HomeScreen> {
         type: BottomNavigationBarType.fixed,
         currentIndex: _index,
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.file_copy), label: 'FTP File'),
           BottomNavigationBarItem(icon: Icon(Icons.tune), label: 'Controller'),
+          BottomNavigationBarItem(icon: Icon(Icons.file_copy), label: 'FTP File'),
           BottomNavigationBarItem(icon: Icon(Icons.terminal), label: 'Log'),
         ],
         onTap: (i){
