@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_wifi_udp/command/outcommand.dart';
+import 'package:flutter_wifi_udp/manager/ble_manager.dart';
 import 'package:flutter_wifi_udp/manager/ftp_manager.dart';
 import 'package:flutter_wifi_udp/manager/setup_options.dart';
 import 'package:flutter_wifi_udp/utility/string_tool.dart';
@@ -39,22 +41,27 @@ class _FilePageState extends State<FilePage> {
       ),
       body: Column(
         children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [Icon(Icons.info), Text('長按檔案項目以開啟操作列表')],
+            ),
+          ),
           const Expanded(
             child: FtpBrowser(),
             flex: 1,
           ),
           const Divider(),
           ListTile(
-            leading: const Icon(Icons.folder_open),
-            title: const Text('上傳檔案'),
-            subtitle: const Text('找裝置中的檔案'),
-            trailing: busy ? const CircularProgressIndicator() : const Icon(Icons.search),
-            onTap: () {
-              if(state == 2) {
-                pickFile();
-              }
-            }
-          ),
+              leading: const Icon(Icons.folder_open),
+              title: const Text('上傳檔案'),
+              subtitle: const Text('找裝置中的檔案'),
+              trailing: busy ? const CircularProgressIndicator() : const Icon(Icons.search),
+              onTap: () {
+                if (state == 2) {
+                  pickFile();
+                }
+              }),
         ],
       ),
     );
@@ -94,6 +101,8 @@ class FtpBrowser extends StatefulWidget {
 }
 
 class _FtpBrowserState extends State<FtpBrowser> {
+  AlertDialog? actionsDialog;
+
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<List<FTPEntry>>(
@@ -108,20 +117,22 @@ class _FtpBrowserState extends State<FtpBrowser> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       ElevatedButton(
-                        onPressed: state == 0 ? () {
-                          var ssid = SetupOptions.instance.getValue('WiFi_SSID');
-                          var pw = SetupOptions.instance.getValue('WiFi_Password');
-                          if (ssid != null && pw != null) {
-                            connect(ssid, pw);
-                          }
-                        }: null,
+                        onPressed: state == 0
+                            ? () {
+                                var ssid = SetupOptions.instance.getValue('WiFi_SSID');
+                                var pw = SetupOptions.instance.getValue('WiFi_Password');
+                                if (ssid != null && pw != null) {
+                                  connect(ssid, pw);
+                                }
+                              }
+                            : null,
                         child: Padding(
                           padding: const EdgeInsets.all(16.0),
                           child: Text(state == 0 ? '連接檔案目錄' : '連接中．．．'),
                         ),
                         style: ButtonStyle(
                             foregroundColor: MaterialStateProperty.all(Colors.white),
-                            backgroundColor: MaterialStateProperty.all( state == 0 ? Colors.red: Colors.yellow),
+                            backgroundColor: MaterialStateProperty.all(state == 0 ? Colors.red : Colors.amber),
                             shape: MaterialStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(36.0),
                                 side: const BorderSide(color: Colors.white)))),
@@ -134,19 +145,17 @@ class _FtpBrowserState extends State<FtpBrowser> {
                   itemBuilder: (context, index) {
                     var time = DateFormat('yyyy/MM/dd HH:mm:ss').format(files[index].modifyTime!);
                     return ListTile(
-                      leading: Icon(files[index].type == FTPEntryType.FILE ? Icons.file_copy : Icons.folder),
+                      leading: Icon(files[index].name.contains('mp3') ? Icons.music_note : Icons.file_copy),
                       title: Text(utf8Decode(files[index].name)),
                       subtitle: Text(time),
-                      trailing: IconButton(
-                        icon: const Icon(
-                          Icons.close,
-                          size: 18,
-                        ),
-                        onPressed: () async {
-                          await FtpManager.instance.deleteFile(utf8Decode(files[index].name));
-                          FtpManager.instance.refreshFiles();
-                        },
-                      ),
+                      onTap: () {
+                        playSound(files[index]);
+                      },
+                      onLongPress: () {
+                        if (files[index].name.contains('mp3')) {
+                          showActionsDialog(files[index]);
+                        }
+                      },
                     );
                   });
         });
@@ -189,7 +198,8 @@ class _FtpBrowserState extends State<FtpBrowser> {
   }
 
   Future bindFtp() async {
-    var success = await FtpManager.instance.connect().timeout(const Duration(seconds: 6), onTimeout: () => false) ?? false;
+    var success =
+        await FtpManager.instance.connect().timeout(const Duration(seconds: 6), onTimeout: () => false) ?? false;
     setState(() {
       state = success ? 2 : 0;
     });
@@ -200,5 +210,54 @@ class _FtpBrowserState extends State<FtpBrowser> {
         print(e.toString());
       }
     }
+  }
+
+  void playSound(FTPEntry file) {
+    var cmd = SetPlaySoundCommand(file.name);
+    BleManager.instance.sendCommand(cmd);
+  }
+
+  void showActionsDialog(FTPEntry file) {
+    showDialog(
+        context: context,
+        builder: (c) {
+          return AlertDialog(
+            content: Container(
+              width: 300,
+              height: 200,
+              child: ListView(
+                children: [
+                  TextButton(
+                      onPressed: () {
+                        var cmd = SetPlaySoundCommand(utf8Decode(file.name));
+                        BleManager.instance.sendCommand(cmd);
+                        Navigator.pop(context);
+                      },
+                      child: Text('播放')),
+                  TextButton(
+                      onPressed: () {
+                        var cmd = SetBootSoundCommand(true, utf8Decode(file.name));
+                        BleManager.instance.sendCommand(cmd);
+                        Navigator.pop(context);
+                      },
+                      child: Text('設為開機音效')),
+                  TextButton(
+                      onPressed: () {
+                        var cmd = SetBlinkSoundCommand(true, utf8Decode(file.name));
+                        BleManager.instance.sendCommand(cmd);
+                        Navigator.pop(context);
+                      },
+                      child: Text('設為閃爍音效')),
+                  TextButton(
+                      onPressed: () {
+                        FtpManager.instance.deleteFile(utf8Decode(file.name));
+                        Navigator.pop(context);
+                      },
+                      child: Text('刪除')),
+                ],
+              ),
+            ),
+          );
+        });
   }
 }

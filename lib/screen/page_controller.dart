@@ -9,6 +9,7 @@ import 'package:flutter_wifi_udp/manager/ble_manager.dart';
 import 'package:flutter_wifi_udp/manager/ftp_manager.dart';
 import 'package:flutter_wifi_udp/manager/setup_options.dart';
 import 'package:flutter_wifi_udp/utility/string_tool.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../command/incommand.dart';
@@ -162,6 +163,29 @@ class _ControllerPageState extends State<ControllerPage> {
           case ReceivedFlashSize:
             _flashSize =
                 (event as ReceivedFlashSize).spare.toString() + ',' + (event as ReceivedFlashSize).total.toString();
+            break;
+          case ResultOk:
+            Fluttertoast.showToast(
+                msg: "設定成功",
+                toastLength: Toast.LENGTH_SHORT,
+                gravity: ToastGravity.CENTER,
+                timeInSecForIosWeb: 1,
+                backgroundColor: Colors.black,
+                textColor: Colors.white,
+                fontSize: 16.0
+            );
+            break;
+          case ResultError:
+            Fluttertoast.showToast(
+                msg: "設定失敗",
+                toastLength: Toast.LENGTH_SHORT,
+                gravity: ToastGravity.CENTER,
+                timeInSecForIosWeb: 1,
+                backgroundColor: Colors.deepOrange,
+                textColor: Colors.white,
+                fontSize: 16.0
+            );
+            break;
         }
       });
     });

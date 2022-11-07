@@ -85,7 +85,7 @@ abstract class InCommand{
 }
 
 class ResultOk extends InCommand{
-  static const String tag = 'Ok';
+  static const String tag = 'OK';
 }
 
 class ResultError extends InCommand{
