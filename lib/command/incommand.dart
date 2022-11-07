@@ -93,9 +93,9 @@ class ResultError extends InCommand{
 }
 
 class ReceivedVolume extends InCommand{
-  static const String tag = 'Volumn';
-  int volumn = 0;
-  ReceivedVolume(this.volumn);
+  static const String tag = 'Volume';
+  int volume = 0;
+  ReceivedVolume(this.volume);
 }
 
 class ReceivedBlinktime extends InCommand{

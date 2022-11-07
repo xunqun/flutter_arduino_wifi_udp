@@ -131,7 +131,7 @@ class _ControllerPageState extends State<ControllerPage> {
       setState(() {
         switch (event.runtimeType) {
           case ReceivedVolume:
-            _volume = (event as ReceivedVolume).volumn;
+            _volume = (event as ReceivedVolume).volume;
             break;
           case ReceivedBlinktime:
             _blink = (event as ReceivedBlinktime).value;
@@ -469,7 +469,7 @@ class _ControllerPageState extends State<ControllerPage> {
         ElevatedButton(
             onPressed: () {
               if (_playSound.isNotEmpty) {
-                var cmd = SetPlaySoundCommand(_playSound);
+                var cmd = AskPlaySoundCommand(_playSound);
                 BleManager.instance.sendCommand(cmd);
               }
             },

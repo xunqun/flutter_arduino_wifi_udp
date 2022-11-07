@@ -130,7 +130,7 @@ class _BleConnectScreenState extends State<BleConnectScreen> {
     AskWifiSsidCommand(),
     AskWifiPwCommand(),
     AskBlinkSoundCommand(),
-    AskBootSoundCommnad(),
+    AskBootSoundCommand(),
     AskBlinkTime(),
     AskVolumeCommand(),
   ];

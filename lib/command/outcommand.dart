@@ -121,7 +121,7 @@ class SetBootSoundCommand extends OutCommanad {
   }
 }
 
-class AskBootSoundCommnad extends OutCommanad {
+class AskBootSoundCommand extends OutCommanad {
   get bytes => utf8.encode(string);
 
   get string => 'BootSound?\r\n';
@@ -227,10 +227,10 @@ class SetWifiStatusCommand extends OutCommanad {
 /**
  * Play sound
  */
-class SetPlaySoundCommand extends OutCommanad {
+class AskPlaySoundCommand extends OutCommanad {
   String path;
 
-  SetPlaySoundCommand(this.path);
+  AskPlaySoundCommand(this.path);
 
   get bytes => utf8.encode(string);
 

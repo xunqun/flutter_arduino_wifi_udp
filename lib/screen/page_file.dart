@@ -32,11 +32,6 @@ class _FilePageState extends State<FilePage> {
       appBar: AppBar(
         title: const Text('FTP files'),
         actions: [
-          IconButton(
-              onPressed: () {
-                FtpManager.instance.refreshFiles();
-              },
-              icon: const Icon(Icons.refresh))
         ],
       ),
       body: Column(
@@ -213,7 +208,7 @@ class _FtpBrowserState extends State<FtpBrowser> {
   }
 
   void playSound(FTPEntry file) {
-    var cmd = SetPlaySoundCommand(file.name);
+    var cmd = AskPlaySoundCommand(file.name);
     BleManager.instance.sendCommand(cmd);
   }
 
@@ -229,7 +224,7 @@ class _FtpBrowserState extends State<FtpBrowser> {
                 children: [
                   TextButton(
                       onPressed: () {
-                        var cmd = SetPlaySoundCommand(utf8Decode(file.name));
+                        var cmd = AskPlaySoundCommand(utf8Decode(file.name));
                         BleManager.instance.sendCommand(cmd);
                         Navigator.pop(context);
                       },
