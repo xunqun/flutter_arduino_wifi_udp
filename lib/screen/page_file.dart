@@ -21,6 +21,7 @@ class FilePage extends StatefulWidget {
 
   @override
   State<FilePage> createState() => _FilePageState();
+
 }
 
 class _FilePageState extends State<FilePage> {
@@ -32,6 +33,9 @@ class _FilePageState extends State<FilePage> {
       appBar: AppBar(
         title: const Text('FTP files'),
         actions: [
+          IconButton(onPressed: () {
+            handleConnect();
+          }, icon: Icon(Icons.refresh))
         ],
       ),
       body: Column(
@@ -42,8 +46,8 @@ class _FilePageState extends State<FilePage> {
               children: [Icon(Icons.info), Text('長按檔案項目以開啟操作列表')],
             ),
           ),
-          const Expanded(
-            child: FtpBrowser(),
+          Expanded(
+            child: FtpBrowser(connectCallback: handleConnect),
             flex: 1,
           ),
           const Divider(),
@@ -60,6 +64,14 @@ class _FilePageState extends State<FilePage> {
         ],
       ),
     );
+  }
+
+  void handleConnect(){
+    var ssid = SetupOptions.instance.getValue('WiFi_SSID');
+    var pw = SetupOptions.instance.getValue('WiFi_Password');
+    if (ssid != null && pw != null) {
+      connect(ssid, pw);
+    }
   }
 
   void upload(BuildContext context, String path, String ext) async {
@@ -86,88 +98,14 @@ class _FilePageState extends State<FilePage> {
       FtpManager.instance.refreshFiles();
     }
   }
-}
-
-class FtpBrowser extends StatefulWidget {
-  const FtpBrowser({Key? key}) : super(key: key);
-
-  @override
-  State<FtpBrowser> createState() => _FtpBrowserState();
-}
-
-class _FtpBrowserState extends State<FtpBrowser> {
-  AlertDialog? actionsDialog;
-
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder<List<FTPEntry>>(
-        stream: FtpFilesObserver.instance().stream,
-        initialData: FtpFilesObserver.instance().getFiles(),
-        builder: (context, snapshot) {
-          var files = snapshot.data ?? [];
-          return state != 2
-              ? Padding(
-                  padding: EdgeInsets.all(16.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      ElevatedButton(
-                        onPressed: state == 0
-                            ? () {
-                                var ssid = SetupOptions.instance.getValue('WiFi_SSID');
-                                var pw = SetupOptions.instance.getValue('WiFi_Password');
-                                if (ssid != null && pw != null) {
-                                  connect(ssid, pw);
-                                }
-                              }
-                            : null,
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Text(state == 0 ? '連接檔案目錄' : '連接中．．．'),
-                        ),
-                        style: ButtonStyle(
-                            foregroundColor: MaterialStateProperty.all(Colors.white),
-                            backgroundColor: MaterialStateProperty.all(state == 0 ? Colors.red : Colors.amber),
-                            shape: MaterialStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(36.0),
-                                side: const BorderSide(color: Colors.white)))),
-                      ),
-                    ],
-                  ),
-                )
-              : ListView.builder(
-                  itemCount: files.length,
-                  itemBuilder: (context, index) {
-                    var time = DateFormat('yyyy/MM/dd HH:mm:ss').format(files[index].modifyTime!);
-                    return ListTile(
-                      leading: Icon(files[index].name.contains('mp3') ? Icons.music_note : Icons.file_copy),
-                      title: Text(utf8Decode(files[index].name)),
-                      subtitle: Text(time),
-                      onTap: () {
-                        playSound(files[index]);
-                      },
-                      onLongPress: () {
-                        if (files[index].name.contains('mp3')) {
-                          showActionsDialog(files[index]);
-                        }
-                      },
-                    );
-                  });
-        });
-  }
-
-  @override
-  void dispose() {
-    FtpManager.instance.disconnect();
-    WiFiForIoTPlugin.disconnect();
-    state = 0;
-    super.dispose();
-  }
 
   void connect(String ssid, String pw) async {
+    disconnect();
+    await Future.delayed(Duration(milliseconds: 300));
     setState(() {
       state = 1;
     });
+
     var success = await WiFiForIoTPlugin.connect(ssid, password: pw, joinOnce: true, security: NetworkSecurity.WPA)
         .timeout(Duration(seconds: 10), onTimeout: () => false);
     udpManager.isConnected = success;
@@ -183,12 +121,16 @@ class _FtpBrowserState extends State<FtpBrowser> {
   }
 
   void disconnect() {
-    FtpManager.instance.disconnect();
-    WiFiForIoTPlugin.disconnect();
-    if (mounted) {
-      setState(() {
-        state = 0;
-      });
+    try {
+      FtpManager.instance.disconnect();
+      WiFiForIoTPlugin.disconnect();
+      if (mounted) {
+        setState(() {
+          state = 0;
+        });
+      }
+    }catch(e){
+
     }
   }
 
@@ -206,6 +148,85 @@ class _FtpBrowserState extends State<FtpBrowser> {
       }
     }
   }
+}
+
+class FtpBrowser extends StatefulWidget {
+  final VoidCallback? connectCallback;
+
+  const FtpBrowser({Key? key, this.connectCallback}) : super(key: key);
+
+  @override
+  State<FtpBrowser> createState() => _FtpBrowserState();
+}
+
+class _FtpBrowserState extends State<FtpBrowser> {
+  AlertDialog? actionsDialog;
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<List<FTPEntry>>(
+        stream: FtpFilesObserver
+            .instance()
+            .stream,
+        initialData: FtpFilesObserver.instance().getFiles(),
+        builder: (context, snapshot) {
+          var files = snapshot.data ?? [];
+          return state != 2
+              ? Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton(
+                  onPressed: state == 0
+                      ? () {
+                    if (widget.connectCallback != null) {
+                      widget.connectCallback!();
+                    }
+                  }: null,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text(state == 0 ? '連接檔案目錄' : '連接中．．．'),
+                  ),
+                  style: ButtonStyle(
+                      foregroundColor: MaterialStateProperty.all(Colors.white),
+                      backgroundColor: MaterialStateProperty.all(state == 0 ? Colors.red : Colors.amber),
+                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(36.0),
+                          side: const BorderSide(color: Colors.white)))),
+                ),
+              ],
+            ),
+          )
+              : ListView.builder(
+              itemCount: files.length,
+              itemBuilder: (context, index) {
+                var time = DateFormat('yyyy/MM/dd HH:mm:ss').format(files[index].modifyTime!);
+                return ListTile(
+                  leading: Icon(files[index].name.contains('mp3') ? Icons.music_note : Icons.file_copy),
+                  title: Text(utf8Decode(files[index].name)),
+                  subtitle: Text(time),
+                  onTap: () {
+                    playSound(files[index]);
+                  },
+                  onLongPress: () {
+                    if (files[index].name.contains('mp3')) {
+                      showActionsDialog(files[index]);
+                    }
+                  },
+                );
+              });
+        });
+  }
+
+  @override
+  void dispose() {
+    // FtpManager.instance.disconnect();
+    // WiFiForIoTPlugin.disconnect();
+    // state = 0;
+    super.dispose();
+  }
+
 
   void playSound(FTPEntry file) {
     var cmd = AskPlaySoundCommand(file.name);

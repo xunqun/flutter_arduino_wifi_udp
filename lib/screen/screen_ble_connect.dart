@@ -51,7 +51,6 @@ class _BleConnectScreenState extends State<BleConnectScreen> {
           });
           break;
         default:
-
       }
     });
   }
@@ -59,24 +58,44 @@ class _BleConnectScreenState extends State<BleConnectScreen> {
   @override
   Widget build(BuildContext context) {
     var _bleName = SetupOptions.instance.getValue('BLE_Name');
-    return Container(
-      color: Colors.white,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          SizedBox(
-            width: 200,
-            height: 64,
-            child: buildElevatedButton(_bleName),
+    return SafeArea(
+      child: Scaffold(
+        body: Container(
+          width: double.infinity,
+          color: Colors.white,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(
+                height: 96,
+              ),
+              Text('KOSO FLASHER', style: TextStyle(fontSize: 48),),
+              Spacer(),
+              SizedBox(
+                width: 200,
+                height: 64,
+                child: buildElevatedButton(_bleName),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  stateDesc,
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              ),
+              appState.connectState == ConnectState.bleconnected
+                  ? IconButton(
+                      onPressed: () {
+                        Navigator.of(context).push(MaterialPageRoute(builder: (c) => const HomeScreen()));
+                      },
+                      icon: Icon(Icons.home_filled))
+                  : Container(),
+              SizedBox(
+                height: 96,
+              ),
+            ],
           ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text(
-              stateDesc,
-              style: const TextStyle(fontSize: 12, color: Colors.grey),
-            ),
-          )
-        ],
+        ),
       ),
     );
   }
@@ -89,7 +108,7 @@ class _BleConnectScreenState extends State<BleConnectScreen> {
               BleManager.instance.scanToConnect(_bleName ?? 'Flasher BLE');
             },
             style: ButtonStyle(
-              foregroundColor: MaterialStateProperty.all(Colors.white),
+                foregroundColor: MaterialStateProperty.all(Colors.white),
                 backgroundColor: MaterialStateProperty.all(Colors.red),
                 shape: MaterialStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(36.0), side: const BorderSide(color: Colors.white)))),
@@ -100,9 +119,11 @@ class _BleConnectScreenState extends State<BleConnectScreen> {
             BleManager.instance.disconnect();
           },
           child: const Text('中斷連線'),
-          style: ButtonStyle(backgroundColor: MaterialStateProperty.all(Colors.green), foregroundColor: MaterialStateProperty.all(Colors.white),
+          style: ButtonStyle(
+              backgroundColor: MaterialStateProperty.all(Colors.green),
+              foregroundColor: MaterialStateProperty.all(Colors.white),
               shape: MaterialStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(36.0), side: const BorderSide(color: Colors.white)))),
+                  borderRadius: BorderRadius.circular(36.0), side: const BorderSide(color: Colors.white)))),
         );
       default:
         return ElevatedButton(
@@ -145,7 +166,7 @@ class _BleConnectScreenState extends State<BleConnectScreen> {
       await Future.delayed(const Duration(milliseconds: 150));
     }
 
-    if(appState.connectState == ConnectState.bleconnected) {
+    if (appState.connectState == ConnectState.bleconnected) {
       await Future.delayed(const Duration(seconds: 1));
       Navigator.of(context).push(MaterialPageRoute(builder: (c) => const HomeScreen()));
     }
