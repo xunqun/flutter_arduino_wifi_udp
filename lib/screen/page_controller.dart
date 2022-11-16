@@ -8,6 +8,7 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_wifi_udp/manager/ble_manager.dart';
 import 'package:flutter_wifi_udp/manager/ftp_manager.dart';
 import 'package:flutter_wifi_udp/manager/setup_options.dart';
+import 'package:flutter_wifi_udp/model/pending_rollback.dart';
 import 'package:flutter_wifi_udp/utility/string_tool.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:path_provider/path_provider.dart';
@@ -41,10 +42,14 @@ class ControllerPage extends StatefulWidget {
 }
 
 class _ControllerPageState extends State<ControllerPage> {
-  var progress = 0;
   int _volume = 20;
+  int _volumeView = 20;
+
   int _blink = 600;
+  int _blinkView = 600;
+
   bool _enableBootSound = false;
+
   bool _enableBlinkSound = false;
   String _selectedBootSound = '';
   String _selectedBlinkSound = '';
@@ -57,13 +62,18 @@ class _ControllerPageState extends State<ControllerPage> {
 
   var _flashSize = '0,0';
   var _version = 'unknow';
-
+  PendingRollback? _pendingRollback = null;
   Map<String, dynamic>? _options;
 
   _updateValue(Map<String, dynamic> map) async {
     _volume = map['Volume'] ?? 20;
+    _volumeView = _volume;
+
     _blink = map['Blink_Time'] ?? 600;
+    _blinkView = _blink;
+
     _enableBootSound = map['Boot_Sound_EN'] == 1;
+
     _enableBlinkSound = map['Blink_Sound_Mode'] == 1;
     _selectedBootSound = (map.containsKey('Boot_Sound') ? map['Boot_Sound'] : '');
     _selectedBootSound = _selectedBootSound.replaceAll("/r/", "");
@@ -132,9 +142,11 @@ class _ControllerPageState extends State<ControllerPage> {
         switch (event.runtimeType) {
           case ReceivedVolume:
             _volume = (event as ReceivedVolume).volume;
+            _volumeView = _volume;
             break;
           case ReceivedBlinktime:
             _blink = (event as ReceivedBlinktime).value;
+            _blinkView = _blink;
             break;
           case ReceivedBootSound:
             _selectedBootSound = (event as ReceivedBootSound).value;
@@ -165,6 +177,7 @@ class _ControllerPageState extends State<ControllerPage> {
                 (event as ReceivedFlashSize).spare.toString() + ',' + (event as ReceivedFlashSize).total.toString();
             break;
           case ResultOk:
+            _pendingRollback = null;
             Fluttertoast.showToast(
                 msg: "設定成功",
                 toastLength: Toast.LENGTH_SHORT,
@@ -176,6 +189,13 @@ class _ControllerPageState extends State<ControllerPage> {
             );
             break;
           case ResultError:
+            if(_pendingRollback != null){
+              SetupOptions.instance.putValue(_pendingRollback!.key, _pendingRollback!.oriValue);
+              setState(() {
+                _updateValue(SetupOptions.instance.options);
+              });
+              _pendingRollback = null;
+            }
             Fluttertoast.showToast(
                 msg: "設定失敗",
                 toastLength: Toast.LENGTH_SHORT,
@@ -230,12 +250,6 @@ class _ControllerPageState extends State<ControllerPage> {
         Card(
           child: Padding(
             padding: const EdgeInsets.all(16.0),
-            child: buildSetVolumn(),
-          ),
-        ),
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
             child: buildEnableBootSound(),
           ),
         ),
@@ -246,6 +260,7 @@ class _ControllerPageState extends State<ControllerPage> {
               children: [
                 buildEnableBlinkSound(),
                 buildBlinkInterval(),
+                buildSetVolumn(),
               ],
             ),
           ),
@@ -390,6 +405,7 @@ class _ControllerPageState extends State<ControllerPage> {
               setState(() {
                 _lightError = v;
               });
+              _pendingRollback = PendingRollback(key: 'Light_Error_EN', oriValue: !v ? 1 : 0, toValue: v ? 1 : 0);
               SetupOptions.instance.putLightError(_lightError);
               var cmd = SetLightErrorCommand(_lightError);
               BleManager.instance.sendCommand(cmd);
@@ -430,6 +446,7 @@ class _ControllerPageState extends State<ControllerPage> {
               setState(() {
                 _wifiOn = enable;
               });
+              _pendingRollback = PendingRollback(key: 'WiFi_Status', oriValue: !enable ? 1 : 0, toValue: enable ? 1 : 0);
               SetupOptions.instance.putWifiStatus(enable);
               var cmd = SetWifiStatusCommand(enable);
               BleManager.instance.sendCommand(cmd);
@@ -488,88 +505,6 @@ class _ControllerPageState extends State<ControllerPage> {
     );
   }
 
-  Widget buildBlinkSound() {
-    var items = FtpManager.instance
-        .getFiles()
-        .map(
-          (e) => DropdownMenuItem<String>(
-            child: Text(utf8Decode(e.name)),
-            value: utf8Decode(e.name),
-          ),
-        )
-        .toList();
-    // add none option
-    items.add(DropdownMenuItem(
-      child: Text(
-        '無',
-      ),
-      value: '',
-    ));
-    return Row(
-      children: [
-        const Text('設定閃爍音效'),
-        const Spacer(),
-        DropdownButton(
-          value: _selectedBlinkSound,
-          items: items,
-          onChanged: _enableBlinkSound
-              ? (path) {
-                  setState(() {
-                    _selectedBlinkSound = path.toString();
-                  });
-                  SetupOptions.instance.putBlinkSound(_selectedBootSound);
-                  var cmd = SetBlinkSoundCommand(_enableBlinkSound, _selectedBlinkSound);
-                  BleManager.instance.sendCommand(cmd);
-                }
-              : null,
-          enableFeedback: true,
-          alignment: Alignment.centerRight,
-        ),
-      ],
-    );
-  }
-
-  Widget buildBootSound() {
-    var items = FtpManager.instance
-        .getFiles()
-        .map(
-          (e) => DropdownMenuItem<String>(
-            child: Text(utf8Decode(e.name)),
-            value: utf8Decode(e.name),
-          ),
-        )
-        .toList();
-    // add none option
-    items.add(DropdownMenuItem(
-      child: Text(
-        '無',
-      ),
-      value: '',
-    ));
-    return Row(
-      children: [
-        const Text('設定開機音效'),
-        const Spacer(),
-        DropdownButton(
-          value: _selectedBootSound,
-          items: items,
-          onChanged: _enableBootSound
-              ? (path) {
-                  setState(() {
-                    _selectedBootSound = path.toString();
-                  });
-                  SetupOptions.instance.putBootSound(_selectedBootSound);
-                  var cmd = SetBootSoundCommand(_enableBootSound, _selectedBootSound);
-                  BleManager.instance.sendCommand(cmd);
-                }
-              : null,
-          enableFeedback: true,
-          alignment: Alignment.centerRight,
-        ),
-      ],
-    );
-  }
-
   Widget buildEnableBlinkSound() {
     return Row(
       children: [
@@ -581,6 +516,7 @@ class _ControllerPageState extends State<ControllerPage> {
               setState(() {
                 _enableBlinkSound = enable;
               });
+              _pendingRollback = PendingRollback(key: 'Blink_Sound_Mode', oriValue: !enable ? 1 : 0, toValue: enable ? 1 : 0);
               SetupOptions.instance.putEnableBlinkSound(enable);
               var cmd = SetBlinkSoundCommand(_enableBlinkSound, _selectedBlinkSound);
               BleManager.instance.sendCommand(cmd);
@@ -599,10 +535,11 @@ class _ControllerPageState extends State<ControllerPage> {
             onChanged: (enable) {
               setState(() {
                 _enableBootSound = enable;
-                SetupOptions.instance.putEnableBootSound(enable);
-                var cmd = SetBootSoundCommand(enable, null);
-                BleManager.instance.sendCommand(cmd);
               });
+              _pendingRollback = PendingRollback(key: 'Boot_Sound_EN', oriValue: !enable ? 1 : 0, toValue: enable ? 1 : 0);
+              SetupOptions.instance.putEnableBootSound(enable);
+              var cmd = SetBootSoundCommand(enable, null);
+              BleManager.instance.sendCommand(cmd);
             })
       ],
     );
@@ -613,19 +550,21 @@ class _ControllerPageState extends State<ControllerPage> {
       children: [
         Text('閃爍時間'),
         Spacer(),
-        Text('${_blink.toInt()}'),
+        Text('${_blinkView.toInt()}'),
         Slider(
           onChanged: _enableBlinkSound ? (double value) {
             setState(() {
-              _blink = value.toInt();
+              _blinkView = value.toInt();
             });
           }: null,
           onChangeEnd: _enableBlinkSound ? (double value) {
-            var cmd = SetBlinkTimeCommand(_blink.toInt());
-            SetupOptions.instance.putBlinkInterval(_blink.toInt());
+            _pendingRollback = PendingRollback(key: 'Blink_Time', oriValue:_blink, toValue:value.toInt());
+            var cmd = SetBlinkTimeCommand(value.toInt());
+            SetupOptions.instance.putBlinkInterval(value.toInt());
             BleManager.instance.sendCommand(cmd);
+            _blink = value.toInt();
           }: null,
-          value: _blink.toDouble(),
+          value: _blinkView.toDouble(),
           min: 600,
           max: 850,
           label: '閃爍時間',
@@ -639,19 +578,21 @@ class _ControllerPageState extends State<ControllerPage> {
       children: [
         const Text('調整音量'),
         const Spacer(),
-        Text('${_volume.toInt()}'),
+        Text('${_volumeView.toInt()}'),
         Slider(
-          onChanged: (double value) {
+          onChanged: _enableBlinkSound ? (double value) {
             setState(() {
-              _volume = value.toInt();
+              _volumeView = value.toInt();
             });
-          },
-          onChangeEnd: (double value) {
-            var cmd = SetVolumeCommand(_volume.toInt());
-            SetupOptions.instance.putVolume(_volume.toInt());
+          }: null,
+          onChangeEnd: _enableBlinkSound ?(double value) {
+            _pendingRollback = PendingRollback(key: 'Volume', oriValue: _volume.toInt(), toValue: value.toInt());
+            var cmd = SetVolumeCommand(value.toInt());
+            SetupOptions.instance.putVolume(value.toInt());
             BleManager.instance.sendCommand(cmd);
-          },
-          value: _volume.toDouble(),
+            _volume = value.toInt();
+          }: null,
+          value: _volumeView.toDouble(),
           min: 0,
           max: 21,
         ),
@@ -675,6 +616,7 @@ class _ControllerPageState extends State<ControllerPage> {
         ),
         IconButton(
             onPressed: () {
+              _pendingRollback = PendingRollback(key: 'BLE_Name', oriValue: _bleName, toValue:bleNameController.text);
               _bleName = bleNameController.text;
               SetupOptions.instance.putBleName(_bleName);
               if (_bleName.isNotEmpty) {
@@ -706,6 +648,7 @@ class _ControllerPageState extends State<ControllerPage> {
         ),
         IconButton(
             onPressed: () {
+              _pendingRollback = PendingRollback(key: 'WiFi_SSID', oriValue: _wifiSsid, toValue: wifiSsidController.text);
               _wifiSsid = wifiSsidController.text;
               SetupOptions.instance.putWifiSsid(_wifiSsid);
               if (_wifiSsid.isNotEmpty) {
@@ -734,6 +677,7 @@ class _ControllerPageState extends State<ControllerPage> {
         ),
         IconButton(
             onPressed: () {
+              _pendingRollback = PendingRollback(key: 'WiFi_Password', oriValue: _wifiPw, toValue: wifiPwController.text);
               _wifiPw = wifiPwController.text;
               SetupOptions.instance.putWifiPw(_wifiPw);
               if (_wifiPw.isNotEmpty) {
