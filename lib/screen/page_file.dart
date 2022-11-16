@@ -207,7 +207,9 @@ class _FtpBrowserState extends State<FtpBrowser> {
                   title: Text(utf8Decode(files[index].name)),
                   subtitle: Text(time),
                   onTap: () {
-                    playSound(files[index]);
+                    if (files[index].name.contains('mp3')) {
+                      playSound(files[index]);
+                    }
                   },
                   onLongPress: () {
                     if (files[index].name.contains('mp3')) {
@@ -229,7 +231,7 @@ class _FtpBrowserState extends State<FtpBrowser> {
 
 
   void playSound(FTPEntry file) {
-    var cmd = AskPlaySoundCommand(file.name);
+    var cmd = AskPlaySoundCommand(utf8Decode(file.name));
     BleManager.instance.sendCommand(cmd);
   }
 
@@ -243,13 +245,13 @@ class _FtpBrowserState extends State<FtpBrowser> {
               height: 200,
               child: ListView(
                 children: [
-                  TextButton(
-                      onPressed: () {
-                        var cmd = AskPlaySoundCommand(utf8Decode(file.name));
-                        BleManager.instance.sendCommand(cmd);
-                        Navigator.pop(context);
-                      },
-                      child: Text('播放')),
+                  // TextButton(
+                  //     onPressed: () {
+                  //       var cmd = AskPlaySoundCommand(utf8Decode(file.name));
+                  //       BleManager.instance.sendCommand(cmd);
+                  //       Navigator.pop(context);
+                  //     },
+                  //     child: Text('播放')),
                   TextButton(
                       onPressed: () {
                         var cmd = SetBootSoundCommand(true, utf8Decode(file.name));
