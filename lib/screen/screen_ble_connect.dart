@@ -116,7 +116,20 @@ class _BleConnectScreenState extends State<BleConnectScreen> {
       case 2:
         return ElevatedButton(
           onPressed: () {
-            BleManager.instance.disconnect();
+            showDialog(context: context, builder: (c){
+              return AlertDialog(
+                title: Text('是否要保存參數'),
+                actions: [
+                  ElevatedButton(onPressed: () async{
+                    await BleManager.instance.sendCommand(SetupSaveCommand());
+                    await Future.delayed(Duration(milliseconds: 300));
+                    await BleManager.instance.disconnect();
+                    Navigator.pop(context);
+                  }, child: Text('保存'))
+                ],
+              );
+            });
+
           },
           child: const Text('中斷連線'),
           style: ButtonStyle(
