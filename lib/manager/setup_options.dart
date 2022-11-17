@@ -64,6 +64,7 @@ class SetupOptions {
   void putWifiStatus(bool enable) => putValue('WiFi_Status', enable ? 1 : 0);
 
   void putWifiSsid(String wifiSsid) => putValue('WiFi_SSID', wifiSsid);
+  String? getWifiSsid() => getValue('WiFi_SSID');
 
   void putWifiPw(String wifiPw) => putValue('WiFi_Password', wifiPw);
 

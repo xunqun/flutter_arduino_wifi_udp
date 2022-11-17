@@ -1,6 +1,9 @@
+import 'dart:async';
 import 'dart:convert';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_wifi_udp/channel.dart';
 import 'package:flutter_wifi_udp/command/outcommand.dart';
 import 'package:flutter_wifi_udp/manager/ble_manager.dart';
 import 'package:flutter_wifi_udp/manager/ftp_manager.dart';
@@ -26,6 +29,32 @@ class FilePage extends StatefulWidget {
 
 class _FilePageState extends State<FilePage> {
   var progress = 0;
+
+  StreamSubscription<Map<String, dynamic>>? subs;
+
+
+  @override
+  void initState() {
+    super.initState();
+
+
+    // subs = talkie.connectstateStream.listen((event) {
+    //   String? ssid = SetupOptions.instance.getWifiSsid();
+    //   if(ssid != null && event['name'] == ssid){
+    //     // if(event['connected'] == false){
+    //     //   setState(() {
+    //     //     state = 0;
+    //     //   });
+    //     // }
+    //   }
+    // });
+  }
+
+  @override
+  void dispose() {
+    // subs?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -105,7 +134,6 @@ class _FilePageState extends State<FilePage> {
     setState(() {
       state = 1;
     });
-
     var success = await WiFiForIoTPlugin.connect(ssid, password: pw, joinOnce: true, security: NetworkSecurity.WPA)
         .timeout(Duration(seconds: 10), onTimeout: () => false);
     udpManager.isConnected = success;
@@ -186,7 +214,7 @@ class _FtpBrowserState extends State<FtpBrowser> {
                   }: null,
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
-                    child: Text(state == 0 ? '連接檔案目錄' : '連接中．．．'),
+                    child: Text(state == 0 ? 'Wifi開關' : '連接中．．．'),
                   ),
                   style: ButtonStyle(
                       foregroundColor: MaterialStateProperty.all(Colors.white),
