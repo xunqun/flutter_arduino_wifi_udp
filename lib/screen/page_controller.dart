@@ -378,7 +378,7 @@ class _ControllerPageState extends State<ControllerPage> {
             padding: const EdgeInsets.only(right: 8.0),
             child: const Icon(Icons.numbers),
           ),
-          const Text('版本'),
+          const Text('韌體版本'),
           const Spacer(),
           Text(
             _version.toString().toUpperCase(),

@@ -23,6 +23,7 @@ class _TerminalPageState extends State<TerminalPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('指令紀錄'),
+        automaticallyImplyLeading: false,
         actions: [
           IconButton(
             icon: const Icon(Icons.vertical_align_bottom),
