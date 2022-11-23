@@ -1,5 +1,5 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter_wifi_udp/utility/byte_tool.dart';
+import 'package:koso_flasher/utility/byte_tool.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 Settings settings = Settings();

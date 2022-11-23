@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:flutter_wifi_udp/manager/setup_options.dart';
+import 'package:koso_flasher/manager/setup_options.dart';
 
 abstract class InCommand{
   List<int>? bytes;

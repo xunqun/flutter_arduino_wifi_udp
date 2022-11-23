@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_wifi_udp/manager/settings.dart';
+import 'package:koso_flasher/manager/settings.dart';
 import 'package:provider/src/provider.dart';
 
 class SettingPage extends StatefulWidget {

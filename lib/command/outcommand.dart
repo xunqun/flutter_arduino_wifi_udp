@@ -1,7 +1,7 @@
 import 'dart:convert';
 
-import 'package:flutter_wifi_udp/manager/settings.dart';
-import 'package:flutter_wifi_udp/utility/byte_tool.dart';
+import 'package:koso_flasher/manager/settings.dart';
+import 'package:koso_flasher/utility/byte_tool.dart';
 
 // class StartCommand {
 //   List<int> begin = settings.beginByte;

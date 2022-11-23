@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_wifi_udp/manager/log_manager.dart';
-import 'package:flutter_wifi_udp/manager/udp_manager.dart';
-import 'package:flutter_wifi_udp/model/log.dart';
+import 'package:koso_flasher/manager/log_manager.dart';
+import 'package:koso_flasher/manager/udp_manager.dart';
+import 'package:koso_flasher/model/log.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/src/provider.dart';
 

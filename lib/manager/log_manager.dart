@@ -1,6 +1,6 @@
 import 'dart:collection';
 import 'package:flutter/material.dart';
-import 'package:flutter_wifi_udp/model/log.dart';
+import 'package:koso_flasher/model/log.dart';
 
 var logManager = LogManager();
 class LogManager extends ChangeNotifier{

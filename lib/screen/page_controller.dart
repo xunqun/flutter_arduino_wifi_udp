@@ -5,11 +5,11 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
-import 'package:flutter_wifi_udp/manager/ble_manager.dart';
-import 'package:flutter_wifi_udp/manager/ftp_manager.dart';
-import 'package:flutter_wifi_udp/manager/setup_options.dart';
-import 'package:flutter_wifi_udp/model/pending_rollback.dart';
-import 'package:flutter_wifi_udp/utility/string_tool.dart';
+import 'package:koso_flasher/manager/ble_manager.dart';
+import 'package:koso_flasher/manager/ftp_manager.dart';
+import 'package:koso_flasher/manager/setup_options.dart';
+import 'package:koso_flasher/model/pending_rollback.dart';
+import 'package:koso_flasher/utility/string_tool.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:path_provider/path_provider.dart';
 

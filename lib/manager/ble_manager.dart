@@ -4,9 +4,9 @@ import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
-import 'package:flutter_wifi_udp/command/incommand.dart';
-import 'package:flutter_wifi_udp/manager/log_manager.dart';
-import 'package:flutter_wifi_udp/utility/string_tool.dart';
+import 'package:koso_flasher/command/incommand.dart';
+import 'package:koso_flasher/manager/log_manager.dart';
+import 'package:koso_flasher/utility/string_tool.dart';
 
 import '../command/outcommand.dart';
 import '../constant/state.dart';

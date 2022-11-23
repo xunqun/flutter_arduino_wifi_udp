@@ -5,11 +5,11 @@ import 'dart:typed_data';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_wifi_udp/constant/state.dart';
-import 'package:flutter_wifi_udp/manager/ftp_manager.dart';
-import 'package:flutter_wifi_udp/manager/setup_options.dart';
-import 'package:flutter_wifi_udp/manager/udp_manager.dart';
-import 'package:flutter_wifi_udp/screen/screen_main.dart';
+import 'package:koso_flasher/constant/state.dart';
+import 'package:koso_flasher/manager/ftp_manager.dart';
+import 'package:koso_flasher/manager/setup_options.dart';
+import 'package:koso_flasher/manager/udp_manager.dart';
+import 'package:koso_flasher/screen/screen_main.dart';
 import 'package:wifi_iot/wifi_iot.dart';
 
 class ConnectionScreen extends StatefulWidget {

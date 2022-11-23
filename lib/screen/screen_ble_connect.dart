@@ -1,11 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_wifi_udp/command/outcommand.dart';
-import 'package:flutter_wifi_udp/constant/state.dart';
-import 'package:flutter_wifi_udp/manager/ble_manager.dart';
-import 'package:flutter_wifi_udp/manager/setup_options.dart';
-import 'package:flutter_wifi_udp/screen/screen_main.dart';
+import 'package:koso_flasher/command/outcommand.dart';
+import 'package:koso_flasher/constant/state.dart';
+import 'package:koso_flasher/manager/ble_manager.dart';
+import 'package:koso_flasher/manager/setup_options.dart';
+import 'package:koso_flasher/screen/screen_main.dart';
 
 class BleConnectScreen extends StatefulWidget {
   const BleConnectScreen({Key? key}) : super(key: key);
