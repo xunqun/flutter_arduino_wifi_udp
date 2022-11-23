@@ -227,7 +227,8 @@ class _ControllerPageState extends State<ControllerPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Controller'),
+        title: const Text('控制項'),
+        automaticallyImplyLeading: false,
         actions: [
           IconButton(
               tooltip: '保存',
@@ -324,13 +325,16 @@ class _ControllerPageState extends State<ControllerPage> {
           ),
         ),),
 
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: () {
-              BleManager.instance.sendCommand(AskBleUnboundCommand());
-            },
-            child: const Text('解除藍芽綁定'),
+        Padding(
+          padding: const EdgeInsets.only(left: 8.0, right: 8.0),
+          child: SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () {
+                BleManager.instance.sendCommand(AskBleUnboundCommand());
+              },
+              child: const Text('解除藍芽綁定'),
+            ),
           ),
         ),
         buildFactorySetup(),
@@ -441,25 +445,43 @@ class _ControllerPageState extends State<ControllerPage> {
   }
 
   Widget buildSetupSave() {
-    return SizedBox(
-        width: double.infinity,
-        child: ElevatedButton(
-            onPressed: () {
-              var cmd = SetupSaveCommand();
-              BleManager.instance.sendCommand(cmd);
-            },
-            child: const Text('儲存設定')));
+    return Padding(
+      padding: const EdgeInsets.only(left: 8.0, right: 8.0),
+      child: SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+              onPressed: () {
+                var cmd = SetupSaveCommand();
+                BleManager.instance.sendCommand(cmd);
+              },
+              child: const Text('儲存設定'))),
+    );
   }
 
   Widget buildFactorySetup() {
-    return SizedBox(
-        width: double.infinity,
-        child: ElevatedButton(
-            onPressed: () {
-              var cmd = FactoryResetCommand();
-              BleManager.instance.sendCommand(cmd);
-            },
-            child: const Text('恢復«原廠設定')));
+    return Padding(
+      padding: const EdgeInsets.only(left: 8.0, right: 8.0),
+      child: SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+              onPressed: () {
+                showDialog(context: context, builder: (c){
+                  return AlertDialog(
+                    title: const Text('恢復原廠設定'),
+                    content: const Text('將會移除所有目前的設定'),
+                    actions: [
+                      ElevatedButton(onPressed: (){
+                        var cmd = FactoryResetCommand();
+                        BleManager.instance.sendCommand(cmd);
+                        Navigator.pop(context);
+                      }, child: const Text('OK'))
+                    ],
+                  );
+                });
+
+              },
+              child: const Text('恢復原廠設定'))),
+    );
   }
 
   Widget buildWifiSwitcher() {

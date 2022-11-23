@@ -22,7 +22,7 @@ class _TerminalPageState extends State<TerminalPage> {
     var logMgr = context.watch<LogManager>();
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Terminal'),
+        title: const Text('指令紀錄'),
         actions: [
           IconButton(
             icon: const Icon(Icons.vertical_align_bottom),

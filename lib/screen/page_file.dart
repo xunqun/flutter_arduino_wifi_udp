@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_wifi_udp/command/incommand.dart';
 import 'package:flutter_wifi_udp/command/outcommand.dart';
@@ -69,7 +70,8 @@ class _FilePageState extends State<FilePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('FTP files'),
+        title: const Text('聲音目錄'),
+        automaticallyImplyLeading: false,
         actions: [
           IconButton(
               onPressed: () {
@@ -141,6 +143,7 @@ class _FilePageState extends State<FilePage> {
 
   void connect(String ssid, String pw) async {
     disconnect();
+    SetupOptions.instance.putWifiStatus(true);
     BleManager.instance.sendCommand(SetWifiStatusCommand(true));
     await Future.delayed(const Duration(milliseconds: 300));
     setState(() {
@@ -157,6 +160,7 @@ class _FilePageState extends State<FilePage> {
     } else {
       setState(() {
         state = 0;
+        SetupOptions.instance.putWifiStatus(false);
       });
     }
   }
@@ -168,6 +172,7 @@ class _FilePageState extends State<FilePage> {
       if (mounted) {
         setState(() {
           state = 0;
+          SetupOptions.instance.putWifiStatus(false);
         });
       }
     } catch (e) {}
@@ -178,11 +183,13 @@ class _FilePageState extends State<FilePage> {
         if(state == 1){
           setState(() {
             state = 0;
+            SetupOptions.instance.putWifiStatus(false);
           });
         }});
     var success = await FtpManager.instance.connect().timeout(const Duration(seconds: 6), onTimeout: () => false) ?? false;
     setState(() {
     state = success ? 2 : 0;
+    SetupOptions.instance.putWifiStatus(success);
     });
     if (success) {
     try {
@@ -215,7 +222,14 @@ class _FtpBrowserState extends State<FtpBrowser> {
         initialData: FtpFilesObserver.instance().getFiles(),
         builder: (context, snapshot) {
           var files = snapshot.data ?? [];
-          files = files.where((element) => !element.name.startsWith(('.'))).toList();
+          files = files.where((element) {
+            if(kDebugMode) {
+              // return true;
+              return !element.name.startsWith('.') && element.name.endsWith('.mp3');
+            }else{
+              return !element.name.startsWith('.') && element.name.endsWith('.mp3');
+            }
+          }).toList();
           return state != 2
               ? Padding(
             padding: EdgeInsets.all(16.0),

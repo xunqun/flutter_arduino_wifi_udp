@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_wifi_udp/screen/page_controller.dart';
 import 'package:flutter_wifi_udp/screen/page_file.dart';
@@ -16,7 +17,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   var _index = 0;
-  final _pages = const [ControllerPage(), FilePage(),  TerminalPage()];
+  final _pages = kDebugMode ? const [ControllerPage(), FilePage(),  TerminalPage()] : const [ControllerPage(), FilePage()] ;
 
   StreamSubscription<ConnectState>? stateSubs;
 
@@ -43,10 +44,13 @@ class _HomeScreenState extends State<HomeScreen> {
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         currentIndex: _index,
-        items: const [
+        items: kDebugMode ? const [
           BottomNavigationBarItem(icon: Icon(Icons.tune), label: '控制項'),
-          BottomNavigationBarItem(icon: Icon(Icons.file_copy), label: '檔案目錄'),
+          BottomNavigationBarItem(icon: Icon(Icons.file_copy_outlined), label: '聲音目錄'),
           BottomNavigationBarItem(icon: Icon(Icons.terminal), label: '指令紀錄'),
+        ] :const [
+          BottomNavigationBarItem(icon: Icon(Icons.tune), label: '控制項'),
+          BottomNavigationBarItem(icon: Icon(Icons.file_copy_outlined), label: '聲音目錄'),
         ],
         onTap: (i){
           setState(() {

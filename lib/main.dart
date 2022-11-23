@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_wifi_udp/manager/udp_manager.dart';
 import 'package:flutter_wifi_udp/screen/screen_ble_connect.dart';
-import 'package:flutter_wifi_udp/screen/screen_connect.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 
@@ -43,7 +42,7 @@ class _MyAppState extends State<MyApp> {
       child: MaterialApp(
         title: 'Wifi UDP Client',
         theme: ThemeData(
-          primarySwatch: Colors.blue,
+          primarySwatch: Colors.blueGrey,
         ),
         home: check(),
       ),
