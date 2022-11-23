@@ -90,8 +90,8 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
     var success = await WiFiForIoTPlugin.connect(ssidController.text,
             password: pwController.text, joinOnce: true, security: NetworkSecurity.WPA)
         .timeout(Duration(seconds: 10), onTimeout: () => false);
-    udpManager.isConnected = success;
-    if (udpManager.isConnected) {
+    wifiManager.isConnected = success;
+    if (wifiManager.isConnected) {
       appState.setState(ConnectState.wificonnected);
 
       WiFiForIoTPlugin.forceWifiUsage(true);
@@ -150,8 +150,8 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
         },
       );
       // send hello
-      udpManager.socket = socket;
-      udpManager.write(utf8.encode('hello'));
+      wifiManager.socket = socket;
+      wifiManager.write(utf8.encode('hello'));
     } catch (e) {
       appState.setState(ConnectState.idle);
     }

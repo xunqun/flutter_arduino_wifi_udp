@@ -206,6 +206,11 @@ class _ControllerPageState extends State<ControllerPage> {
                 fontSize: 16.0
             );
             break;
+          case ReceivedWifiTimeout:
+            setState(() {
+              _wifiOn = false;
+            });
+            break;
         }
       });
     });

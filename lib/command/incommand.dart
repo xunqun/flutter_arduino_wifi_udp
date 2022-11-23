@@ -74,6 +74,9 @@ abstract class InCommand{
       case ResultError.tag:
         cmd = ResultError();
         break;
+      case ReceivedWifiTimeout.tag:
+        cmd = ReceivedWifiTimeout();
+        break;
       default:
         cmd = null;
     }
@@ -82,6 +85,10 @@ abstract class InCommand{
   }
 
 
+}
+
+class ReceivedWifiTimeout extends InCommand{
+  static const String tag = 'WiFi Timeout';
 }
 
 class ResultOk extends InCommand{

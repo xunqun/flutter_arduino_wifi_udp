@@ -1,9 +1,7 @@
 import 'dart:async';
-import 'dart:convert';
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_wifi_udp/channel.dart';
+import 'package:flutter_wifi_udp/command/incommand.dart';
 import 'package:flutter_wifi_udp/command/outcommand.dart';
 import 'package:flutter_wifi_udp/manager/ble_manager.dart';
 import 'package:flutter_wifi_udp/manager/ftp_manager.dart';
@@ -24,7 +22,6 @@ class FilePage extends StatefulWidget {
 
   @override
   State<FilePage> createState() => _FilePageState();
-
 }
 
 class _FilePageState extends State<FilePage> {
@@ -32,28 +29,40 @@ class _FilePageState extends State<FilePage> {
 
   StreamSubscription<Map<String, dynamic>>? subs;
 
+  StreamSubscription<InCommand>? inCmdSubs = null;
 
   @override
   void initState() {
     super.initState();
 
+    inCmdSubs = BleManager.instance.inCmdStream.listen((event) {
+      if (event.runtimeType == ReceivedWifiTimeout) {
+        setState(() {
+          state = 0;
+        });
+      }
 
-    // subs = talkie.connectstateStream.listen((event) {
-    //   String? ssid = SetupOptions.instance.getWifiSsid();
-    //   if(ssid != null && event['name'] == ssid){
-    //     // if(event['connected'] == false){
-    //     //   setState(() {
-    //     //     state = 0;
-    //     //   });
-    //     // }
-    //   }
-    // });
+      if (event.runtimeType == ReceivedWiFiStatus) {
+        if ((event as ReceivedWiFiStatus).value == 0) {
+          setState(() {
+            state = 0;
+          });
+        }
+      }
+    });
+
+    if (SetupOptions.instance.getWifiStatus() == 0) {
+      setState(() {
+        state = 0;
+      });
+    }
   }
 
   @override
   void dispose() {
     // subs?.cancel();
     super.dispose();
+    inCmdSubs?.cancel();
   }
 
   @override
@@ -62,9 +71,11 @@ class _FilePageState extends State<FilePage> {
       appBar: AppBar(
         title: const Text('FTP files'),
         actions: [
-          IconButton(onPressed: () {
-            handleConnect();
-          }, icon: Icon(Icons.refresh))
+          IconButton(
+              onPressed: () {
+                handleConnect();
+              },
+              icon: Icon(Icons.refresh))
         ],
       ),
       body: Column(
@@ -95,7 +106,7 @@ class _FilePageState extends State<FilePage> {
     );
   }
 
-  void handleConnect(){
+  void handleConnect() {
     var ssid = SetupOptions.instance.getValue('WiFi_SSID');
     var pw = SetupOptions.instance.getValue('WiFi_Password');
     if (ssid != null && pw != null) {
@@ -130,14 +141,16 @@ class _FilePageState extends State<FilePage> {
 
   void connect(String ssid, String pw) async {
     disconnect();
-    await Future.delayed(Duration(milliseconds: 300));
+    BleManager.instance.sendCommand(SetWifiStatusCommand(true));
+    await Future.delayed(const Duration(milliseconds: 300));
     setState(() {
       state = 1;
     });
     var success = await WiFiForIoTPlugin.connect(ssid, password: pw, joinOnce: true, security: NetworkSecurity.WPA)
-        .timeout(Duration(seconds: 10), onTimeout: () => false);
-    udpManager.isConnected = success;
-    if (udpManager.isConnected) {
+        .timeout(const Duration(seconds: 10), onTimeout: () => false);
+    print('connect wifi -> $ssid ($pw)');
+    wifiManager.isConnected = success;
+    if (wifiManager.isConnected) {
       WiFiForIoTPlugin.forceWifiUsage(true);
       await Future.delayed(const Duration(seconds: 1));
       await bindFtp();
@@ -157,23 +170,26 @@ class _FilePageState extends State<FilePage> {
           state = 0;
         });
       }
-    }catch(e){
-
-    }
+    } catch (e) {}
   }
 
   Future bindFtp() async {
-    var success =
-        await FtpManager.instance.connect().timeout(const Duration(seconds: 6), onTimeout: () => false) ?? false;
+    Future.delayed(Duration(seconds: 6)).then((value){
+        if(state == 1){
+          setState(() {
+            state = 0;
+          });
+        }});
+    var success = await FtpManager.instance.connect().timeout(const Duration(seconds: 6), onTimeout: () => false) ?? false;
     setState(() {
-      state = success ? 2 : 0;
+    state = success ? 2 : 0;
     });
     if (success) {
-      try {
-        await FtpManager.instance.refreshFiles();
-      } catch (e) {
-        print(e.toString());
-      }
+    try {
+    await FtpManager.instance.refreshFiles();
+    } catch (e) {
+    print(e.toString());
+    }
     }
   }
 }
@@ -199,6 +215,7 @@ class _FtpBrowserState extends State<FtpBrowser> {
         initialData: FtpFilesObserver.instance().getFiles(),
         builder: (context, snapshot) {
           var files = snapshot.data ?? [];
+          files = files.where((element) => !element.name.startsWith(('.'))).toList();
           return state != 2
               ? Padding(
             padding: EdgeInsets.all(16.0),
@@ -211,7 +228,8 @@ class _FtpBrowserState extends State<FtpBrowser> {
                     if (widget.connectCallback != null) {
                       widget.connectCallback!();
                     }
-                  }: null,
+                  }
+                      : null,
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Text(state == 0 ? 'Wifi開關' : '連接中．．．'),
@@ -256,7 +274,6 @@ class _FtpBrowserState extends State<FtpBrowser> {
     // state = 0;
     super.dispose();
   }
-
 
   void playSound(FTPEntry file) {
     var cmd = AskPlaySoundCommand(utf8Decode(file.name));

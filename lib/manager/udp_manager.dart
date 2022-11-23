@@ -6,9 +6,9 @@ import 'package:flutter_wifi_udp/constant/state.dart';
 import 'package:flutter_wifi_udp/manager/log_manager.dart';
 import 'package:wifi_iot/wifi_iot.dart';
 
-UdpManager udpManager = UdpManager();
+WifiManager wifiManager = WifiManager();
 
-class UdpManager extends ChangeNotifier {
+class WifiManager extends ChangeNotifier {
   /// Target AP connect state
   ///
   bool _isConnected = false;

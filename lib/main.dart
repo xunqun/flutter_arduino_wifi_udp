@@ -37,7 +37,7 @@ class _MyAppState extends State<MyApp> {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: logManager),
-        ChangeNotifierProvider.value(value: udpManager),
+        ChangeNotifierProvider.value(value: wifiManager),
         ChangeNotifierProvider.value(value: settings)
       ],
       child: MaterialApp(

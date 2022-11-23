@@ -75,7 +75,7 @@ class _TerminalPageState extends State<TerminalPage> {
                       data.add(int.parse(s.substring(i, i + 2), radix: 16));
                     }
                     logManager.addSendRaw(data, msg: 'RAW', desc: 'manual input');
-                    udpManager.write(data);
+                    wifiManager.write(data);
                     error = null;
                   } else {
                     error = '須為16位元字串，偶數個值';

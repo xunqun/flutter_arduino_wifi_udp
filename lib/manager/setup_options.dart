@@ -62,6 +62,7 @@ class SetupOptions {
   void putBlinkSound(String path) => putValue('Blink_Sound', path);
 
   void putWifiStatus(bool enable) => putValue('WiFi_Status', enable ? 1 : 0);
+  int getWifiStatus() => getValue('WiFi_Status') ?? 0;
 
   void putWifiSsid(String wifiSsid) => putValue('WiFi_SSID', wifiSsid);
   String? getWifiSsid() => getValue('WiFi_SSID');
