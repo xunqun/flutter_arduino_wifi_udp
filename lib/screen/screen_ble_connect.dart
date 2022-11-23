@@ -69,7 +69,8 @@ class _BleConnectScreenState extends State<BleConnectScreen> {
               SizedBox(
                 height: 96,
               ),
-              Text('KOSO FLASHER', style: TextStyle(fontSize: 48),),
+              Text('KOSO', style: TextStyle(fontSize: 48),),
+              Text('FLASHER', style: TextStyle(fontSize: 48),),
               Spacer(),
               SizedBox(
                 width: 200,
@@ -121,11 +122,16 @@ class _BleConnectScreenState extends State<BleConnectScreen> {
                 title: Text('是否要保存參數'),
                 actions: [
                   ElevatedButton(onPressed: () async{
+                    await BleManager.instance.disconnect();
+                    Navigator.pop(context);
+                  }, child: Text('不保存')),
+                  ElevatedButton(onPressed: () async{
                     await BleManager.instance.sendCommand(SetupSaveCommand());
                     await Future.delayed(Duration(milliseconds: 300));
                     await BleManager.instance.disconnect();
                     Navigator.pop(context);
-                  }, child: Text('保存'))
+                  }, child: Text('保存')),
+
                 ],
               );
             });

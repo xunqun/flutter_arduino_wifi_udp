@@ -225,11 +225,22 @@ class _ControllerPageState extends State<ControllerPage> {
         title: const Text('Controller'),
         actions: [
           IconButton(
-              tooltip: '由FTP下載',
+              tooltip: '保存',
               onPressed: () {
-                _downloadFromRemote();
+                showDialog(context: context, builder: (c){
+                  return AlertDialog(
+                    title: Text("保存設定"),
+                    content: Text("將目前設定儲存到閃爍器"),
+                    actions: [
+                      ElevatedButton(onPressed: (){
+                        BleManager.instance.sendCommand(SetupSaveCommand());
+                        Navigator.pop(context);
+                      }, child: Text("保存"))
+                    ],
+                  );
+                });
               },
-              icon: const Icon(Icons.file_download))
+              icon: const Icon(Icons.upload))
         ],
       ),
       body: _options != null
@@ -298,11 +309,14 @@ class _ControllerPageState extends State<ControllerPage> {
             ),
           ),
         ),
-        Card(child: Column(
-          children: [
-            buildFlashSize(),
-            buildVersion(),
-          ],
+        Card(child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              buildFlashSize(),
+              buildVersion(),
+            ],
+          ),
         ),),
 
         SizedBox(
@@ -350,12 +364,15 @@ class _ControllerPageState extends State<ControllerPage> {
     return Padding(
       padding: const EdgeInsets.only(top: 16.0, bottom: 16.0),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: const Icon(Icons.numbers),
+          ),
           const Text('版本'),
+          const Spacer(),
           Text(
             _version.toString().toUpperCase(),
-            style: TextStyle(fontWeight: FontWeight.bold),
           )
         ],
       ),
@@ -363,15 +380,19 @@ class _ControllerPageState extends State<ControllerPage> {
   }
 
   Widget buildFlashSize() {
+    var arr = _flashSize.split(',');
     return Padding(
       padding: const EdgeInsets.only(top: 16.0, bottom: 16.0),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
+          const Padding(
+            padding: EdgeInsets.only(right: 8.0),
+            child: Icon(Icons.save),
+          ),
           const Text('記憶體容量'),
+          Spacer(),
           Text(
-            '${_flashSize.toUpperCase()} KB',
-            style: TextStyle(fontWeight: FontWeight.bold),
+            '${arr[1]}KB/ ${arr[0]} KB',
           )
         ],
       ),

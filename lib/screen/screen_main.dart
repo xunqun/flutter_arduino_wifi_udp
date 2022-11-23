@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_wifi_udp/screen/page_controller.dart';
 import 'package:flutter_wifi_udp/screen/page_file.dart';
-import 'package:flutter_wifi_udp/screen/page_settings.dart';
 import 'package:flutter_wifi_udp/screen/page_terminal.dart';
 
 import '../constant/state.dart';
@@ -45,9 +44,9 @@ class _HomeScreenState extends State<HomeScreen> {
         type: BottomNavigationBarType.fixed,
         currentIndex: _index,
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.tune), label: 'Controller'),
-          BottomNavigationBarItem(icon: Icon(Icons.file_copy), label: 'FTP File'),
-          BottomNavigationBarItem(icon: Icon(Icons.terminal), label: 'Log'),
+          BottomNavigationBarItem(icon: Icon(Icons.tune), label: '控制項'),
+          BottomNavigationBarItem(icon: Icon(Icons.file_copy), label: '檔案目錄'),
+          BottomNavigationBarItem(icon: Icon(Icons.terminal), label: '指令紀錄'),
         ],
         onTap: (i){
           setState(() {
