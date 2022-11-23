@@ -1,4 +1,4 @@
-package com.example.flutter_wifi_udp
+package com.koso.flasher
 
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
