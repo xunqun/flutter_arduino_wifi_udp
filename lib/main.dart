@@ -147,6 +147,11 @@ class PermissionPage extends StatelessWidget {
                 onPressed: () {
                   requestPermission();
                 },
+                style: ButtonStyle(
+                    foregroundColor: MaterialStateProperty.all(Colors.white),
+                    backgroundColor: MaterialStateProperty.all(Colors.red),
+                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(36.0), side: const BorderSide(color: Colors.white)))),
                 child: const Text("允許權限"))
           ],
         ),
