@@ -246,7 +246,7 @@ class _ControllerPageState extends State<ControllerPage> {
                   );
                 });
               },
-              icon: const Icon(Icons.upload))
+              icon: const Icon(Icons.save_outlined))
         ],
       ),
       body: _options != null
@@ -744,7 +744,7 @@ class _ControllerPageState extends State<ControllerPage> {
       iconDate = Icons.cloud_done;
       return Icon(
         iconDate,
-        color: Colors.green,
+        color: Colors.white,
       );
     } else if (state == BluetoothDeviceState.disconnected) {
       iconDate = Icons.cloud_off;
