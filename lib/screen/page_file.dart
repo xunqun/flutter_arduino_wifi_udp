@@ -301,31 +301,24 @@ class _FtpBrowserState extends State<FtpBrowser> {
           return AlertDialog(
             content: Container(
               width: 300,
-              height: 200,
               child: ListView(
+                shrinkWrap: true,
                 children: [
-                  // TextButton(
-                  //     onPressed: () {
-                  //       var cmd = AskPlaySoundCommand(utf8Decode(file.name));
-                  //       BleManager.instance.sendCommand(cmd);
-                  //       Navigator.pop(context);
-                  //     },
-                  //     child: Text('播放')),
-                  TextButton(
+                  ElevatedButton(
                       onPressed: () {
                         var cmd = SetBootSoundCommand(true, utf8Decode(file.name));
                         BleManager.instance.sendCommand(cmd);
                         Navigator.pop(context);
                       },
                       child: Text('設為開機音效')),
-                  TextButton(
+                  ElevatedButton(
                       onPressed: () {
                         var cmd = SetBlinkSoundCommand(true, utf8Decode(file.name));
                         BleManager.instance.sendCommand(cmd);
                         Navigator.pop(context);
                       },
                       child: Text('設為閃爍音效')),
-                  TextButton(
+                  ElevatedButton(
                       onPressed: () {
                         FtpManager.instance.deleteFile(utf8Decode(file.name));
                         Navigator.pop(context);
